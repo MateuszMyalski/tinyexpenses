@@ -1,0 +1,22 @@
+<pre>
+             ▗▄▄▄▖▄ ▄▄▄▄  ▄   ▄            
+               █  ▄ █   █ █   █            
+               █  █ █   █  ▀▀▀█            
+               █  █       ▄   █            
+                           ▀▀▀             
+                                           
+                                           
+▗▄▄▄▖▄   ▄ ▄▄▄▄  ▗▞▀▚▖▄▄▄▄   ▄▄▄ ▗▞▀▚▖ ▄▄▄ 
+▐▌    ▀▄▀  █   █ ▐▛▀▀▘█   █ ▀▄▄  ▐▛▀▀▘▀▄▄  
+▐▛▀▀▘▄▀ ▀▄ █▄▄▄▀ ▝▚▄▄▖█   █ ▄▄▄▀ ▝▚▄▄▖▄▄▄▀ 
+▐▙▄▄▖      █                               
+           ▀                               
+                                
+</pre>
+
+<nav>
+{% if current_user.is_authenticated %}
+    <span><a href="{{ url_for('main.index') }}">~{{ current_user.username }}</a></span>
+    <span><a href="{{ url_for('main.logout') }}">Logout</a></span>
+{% endif %}
+</nav>

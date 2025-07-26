@@ -1,0 +1,17 @@
+{% extends "index.html" %}
+
+
+{% block content %}
+<main>
+<h1>Login:</h1>
+{% if message %}
+<h2>{{ message }}</h2>
+{% endif %}
+
+<form method="POST">
+  {{ form.username.label }} {{ form.username() }}<br>
+  {{ form.password.label }} {{ form.password() }}<br>
+  <input type="submit" value="Login">
+</form>
+</main>
+{% endblock %}

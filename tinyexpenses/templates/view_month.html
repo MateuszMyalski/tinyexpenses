@@ -1,0 +1,152 @@
+{% extends "index.html" %}
+{% block content %}
+<script>
+    year_expenses = {}
+</script>
+
+<table border="1" id="expenses-table">
+    <thead>
+        <tr>
+            <th colspan="3" class="time-span-header">
+                <select id="year-select" onchange="location = this.value + '/' + (document.getElementById('month-select').selectedIndex + 1);">
+                    {% for available_year in available_years %}
+                    <option value="{{ url_for('main.view_year', year=available_year) }}" {% if
+                        available_year|int==year|int %}selected{% endif %}>
+                        {{ available_year }}
+                    </option>
+                    {% endfor %}
+                </select>
+                /
+                <select id="month-select"
+                    onchange="location = document.getElementById('year-select').value + '/' + (this.selectedIndex + 1);">
+                    {% for i in range(12) %}
+                    <option value="{{ url_for('main.view_month', year=year, month=loop.index) }}" {% if
+                        loop.index0==month %}selected{% endif %}>
+                        {{ month_names[i] }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </th>
+        </tr>
+        <tr>
+            <th class="category">Category</th>
+            <th class="category-type">Type</th>
+            <th class="month">{{ month_names[month] }}
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for category_type, categories_by_type in expenses_monthly_totals_by_category_type.items() %}
+        {% for category, totals in categories_by_type.items() %}
+        <tr class="category-row {{ category_type.value }}">
+            <td>{{ category }}</td>
+            <td class="category-type">{{ category_type.value[0] }}</td>
+            <td class="expense-cell">
+                {% if totals[month] and category_type != CategoryType.INCOME %}-{% endif %}{{ totals[month] | round(2)
+                }} {{ currency }}
+        </tr>
+        {% endfor %}
+        {% endfor %}
+
+        <tr class="row-separator">
+            <td colspan="3" class="current-balance">💸 Current balance: {{ current_balance | round(2) | format_number}}
+                {{ currency }}</td>
+        </tr>
+
+        <tr class="total-by-month-row">
+            <td colspan="2" class="total-cell">Total</td>
+            <td class="total-cell">{{ monthly_balance | sum | round(2) | format_number }} {{ currency }}</td>
+        </tr>
+
+        <tr class="row-separator">
+            <td colspan="3"><canvas id="regionBar" style="width: 100%; height: 20px;"></canvas></td>
+        </tr>
+
+        {% for category_type, totals in monthly_balance_per_category_type.items() %}
+        <tr class="category-row {{ category_type.value }}">
+            <td colspan="2" rowspan="{% if category_type != CategoryType.INCOME %}2{% else %}1{% endif %}">{{
+                category_type.value }}</td>
+            <td>{{ totals[month] | round(2) | format_number }} {{ currency }}</td>
+        </tr>
+
+        {% if category_type != CategoryType.INCOME %}
+        <tr class="category-row {{ category_type.value }}">
+            <td>
+                {% set income = monthly_balance_per_category_type[CategoryType.INCOME][month] %}
+                {% set expense = totals[month] | abs %}
+                {% if income > 0 %}
+                {{ (expense / income * 100) | round(1) | format_number }} %
+
+                <script>
+                    year_expenses["{{ category_type.value }}"] = {{ (expense / income * 100) | round(0) }};
+                </script>
+                {% else %}
+                0 %
+                {% endif %}
+            </td>
+
+
+
+        </tr>
+        {% endif %}
+        {% endfor %}
+
+
+    </tbody>
+</table>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const barColors = {};
+        Object.keys(year_expenses).forEach(type => {
+            barColors[type] = getComputedStyle(document.querySelector("tr.category-row." + type)).backgroundColor;
+        });
+
+        const canvas = document.getElementById("regionBar");
+        const ctx = canvas.getContext("2d");
+
+        // Ensure canvas scales with device pixel ratio
+        const width = canvas.offsetWidth;
+        const height = canvas.offsetHeight;
+        canvas.width = width;
+        canvas.height = height;
+
+        const total = Object.values(year_expenses).reduce((sum, val) => sum + val, 0);
+
+        Object.keys(year_expenses).forEach(key => {
+            year_expenses[key] = year_expenses[key] / total;
+        });
+
+        const used = Object.values(year_expenses).reduce((sum, val) => sum + val, 0);
+        year_expenses["Other"] = 1 - used;
+
+
+        const regions = [
+            { name: "Needs", color: barColors["Needs"], portion: year_expenses["Needs"] },
+            { name: "Wants", color: barColors["Wants"], portion: year_expenses["Wants"] },
+            { name: "Savings", color: barColors["Savings"], portion: year_expenses["Savings"] },
+            { name: "Other", color: "gray", portion: year_expenses["Other"] },
+        ];
+
+        let x = 0;
+        regions.forEach(region => {
+            const regionWidth = width * region.portion;
+            ctx.fillStyle = region.color;
+            ctx.fillRect(x, 0, regionWidth, height);
+
+            ctx.font = "bold 16px Arial";
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = 'black'
+
+
+            if (region.portion >= 0.05) {
+                ctx.fillText(Math.round(year_expenses[region.name] * 100, 1) + " %", x + regionWidth / 2, canvas.height / 2 + 2);
+            }
+
+            x += regionWidth;
+        });
+    });
+</script>
+
+{% endblock %}
