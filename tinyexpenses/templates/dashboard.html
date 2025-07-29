@@ -3,16 +3,20 @@
 
 {% block content %}
 <main>
-<h1>Welcome to Your Dashboard</h1>
-<p>Here you can view your expenses, manage your budget, and more.</p>
-<ul class="dashboard-menu">
-    <li><a href="{{ url_for('main.expenses_log_append') }}">💵 Append expense</a></li>
-    <li><a href="{{ url_for('main.expenses_log_edit') }}">✒️ Edit expenses</a></li>
-    <li><a href="{{ url_for('main.view_month', year=date.year, month=date.month) }}">📅 Monthly report</a></li>
-    <li><a href="{{ url_for('main.view_year') }}">🗓️ Yearly report</a></li>
-    <li><a href="{{ url_for('main.groups_edit') }}">🗃️ Edit groups</a></li>
-    <li><a href="{{ url_for('main.settings') }}">🔧 Settings</a></li>
+    <div class="middle-container">
+        <h1>Welcome to Your Dashboard</h1>
+        <p>Here you can view your expenses, manage your budget, and more.</p>
+        <ul class=" dashboard-menu">
+            <li><a href="{{ url_for('main.expenses_append') }}">💵 Append expense</a></li>
+            <li><a href="{{ url_for('main.expenses_edit', year=date.year) }}">✒️ Edit expenses</a></li>
+            <li><a href="{{ url_for('main.expenses_view_month', year=date.year, month=date.month) }}">📅 Monthly
+                    report</a>
+            </li>
+            <li><a href="{{ url_for('main.expenses_view_year') }}">🗓️ Yearly report</a></li>
+            <li><a href="{{ url_for('main.categories_edit') }}">🗃️ Edit categories</a></li>
+            <li><a href="{{ url_for('main.settings') }}">🔧 Settings</a></li>
 
-</ul>
+        </ul>
+    </div>
 </main>
 {% endblock %}

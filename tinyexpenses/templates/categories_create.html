@@ -1,0 +1,31 @@
+{% extends "index.html" %}
+
+{% block content %}
+<main>
+    <h1>Error!</h1>
+    <p>
+        Seems like categories file for year <b>{{ year }}</b> <u>does not</u> exists.
+    </p>
+
+    <p>
+        You can create empty one, or select from which year the file should be copied.
+    </p>
+
+    <p>
+        <i>You can always change it using <a href="{{ url_for('main.categories_edit') }}">"Edit categories"</a></i>
+    </p>
+
+    <form method="POST" style="width: 300px" class="standard-form">
+        {{ form.hidden_tag() }}
+
+        <div class="form-group">
+            <label>{{ form.template_year.label }}:</label>
+            {{ form.template_year() }}
+        </div>
+
+        <div class="form-group">
+            {{ form.submit() }}
+        </div>
+    </form>
+</main>
+{% endblock %}

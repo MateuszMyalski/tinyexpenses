@@ -1,3 +1,4 @@
+from tinyexpenses.models import User
 from .django_http import url_has_allowed_host_and_scheme
 from flask import abort, render_template, request, redirect, url_for
 from flask_wtf import FlaskForm
@@ -8,7 +9,7 @@ from .extensions import login_manager, users_db
 class LoginForm(FlaskForm):
     username = StringField('Username',  [validators.DataRequired()])
     password = PasswordField('Password',  [validators.DataRequired()])
-    submit = SubmitField('Submit')
+    submit = SubmitField('Login')
 
 @login_manager.user_loader
 def auth_load_user(user_id):
@@ -20,13 +21,16 @@ def auth_display_login_form():
 
 def auth_authenticate_user():
     form = LoginForm()
-    user = users_db.get(form.username.data)
+    user: User | None = users_db.get(form.username.data)
+
+    if not form.validate():
+        return render_template("login.html", form=form, message="Not validated")
 
     if user is None:
         return render_template("login.html", form=form)
     
     if not user.check_password(form.password.data):
-        return render_template("login.html", form=form, message="Invalid password")
+        return render_template("login.html", form=form, message="Invalid username/password")
     
     login_user(user)
 

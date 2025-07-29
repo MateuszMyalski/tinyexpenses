@@ -5,18 +5,43 @@ import flask_login
 import tomllib
 import os
 import calendar
+from datetime import datetime
+from datetime import date as DateType
 from dataclasses import dataclass, field
 from enum import Enum
 
 
 class ExpenseRecord:
     def __init__(
-        self, timestamp: str, category: str, date: str, amount: str, description: str
+        self,
+        timestamp: str | datetime,
+        category: str,
+        date: str | DateType,
+        amount: str | float,
+        description: str,
     ):
-        self.timestamp = dateutil.parser.parse(timestamp)
-        self.date = dateutil.parser.parse(date).date()
+        if isinstance(timestamp, datetime):
+            self.timestamp = timestamp
+        elif isinstance(timestamp, str):
+            self.timestamp = dateutil.parser.parse(timestamp)
+        else:
+            raise TypeError("Invalid type of timestamp.")
+
+        if isinstance(date, DateType):
+            self.date = date
+        elif isinstance(date, str):
+            self.date = dateutil.parser.parse(date).date()
+        else:
+            raise TypeError("Invalid type of date.")
+
         self.description = description
-        self.amount = float(amount.replace(",", "."))
+        if isinstance(amount, float):
+            self.amount = amount
+        elif isinstance(amount, str):
+            self.amount = float(amount.replace(",", "."))
+        else:
+            raise TypeError("Invalid type of amount.")
+
         self.category = category
 
     def __str__(self) -> str:
@@ -24,8 +49,11 @@ class ExpenseRecord:
 
 
 class User(flask_login.UserMixin):
+    EXPENSES_FILE_NAME = "expenses.csv"
+    CATEGORIES_FILE_NAME = "categories.csv"
+
     full_name = None
-    directory = str()
+    user_directory = str()
     currency = str()
 
     def __init__(self, id, username, password_hash):
@@ -39,37 +67,95 @@ class User(flask_login.UserMixin):
     def get_id(self):
         return self.id
 
-    def get_available_expenses_year_reports(self) -> list[int]:
-        if not os.path.exists(self.directory):
+    def get_available_expenses_reports(self) -> list[int]:
+        if not os.path.exists(self.user_directory):
             return []
 
         available_years = []
-        for entry in os.scandir(self.directory):
+        for entry in os.scandir(self.user_directory):
             if entry.is_dir() and entry.name.isdigit():
                 try:
                     self.get_expenses_report_file(int(entry.name))
                 except FileNotFoundError:
                     continue
                 available_years.append(int(entry.name))
-
         return sorted(available_years)
 
+    def get_available_categories_files(self) -> list[int]:
+        if not os.path.exists(self.user_directory):
+            return []
+        
+        available_years = []
+
+        for entry in os.scandir(self.user_directory):
+            if entry.is_dir() and entry.name.isdigit():
+                try:
+                    self.get_categories_file(int(entry.name))
+                except FileNotFoundError:
+                    continue
+                available_years.append(int(entry.name))
+        return sorted(available_years)
+
+
     def get_expenses_report_file(self, year: int) -> str:
-        expense_report_path = os.path.join(self.directory, str(year), "expenses.csv")
+        expense_report_path = os.path.join(
+            self.user_directory, str(year), self.EXPENSES_FILE_NAME
+        )
         if not os.path.exists(expense_report_path):
             raise FileNotFoundError(
                 f"Expense report file for year {year} does not exist at {expense_report_path}"
             )
         return expense_report_path
 
-    def get_registered_categories_file(self) -> str:
-        categories_file_path = os.path.join(self.directory, "categories.csv")
+    def get_categories_file(self, year: int) -> str:
+        categories_file_path = os.path.join(
+            self.user_directory, str(year), self.CATEGORIES_FILE_NAME
+        )
         if not os.path.exists(categories_file_path):
             raise FileNotFoundError(
                 f"Categories file does not exist at {categories_file_path}"
             )
         return categories_file_path
 
+    def create_categories_file(self, year, template_year: str | int | None = None) -> None:
+        categories_file_path = os.path.join(
+            self.user_directory, year, self.CATEGORIES_FILE_NAME
+        )
+
+        if os.path.exists(categories_file_path):
+            raise FileExistsError("The category file already exists.")
+
+        if template_year is None:
+            with open(categories_file_path, mode="w", newline="") as _:
+                pass
+        else:
+            src = self.get_categories_file(template_year)
+            dst = categories_file_path
+            with open(src, "r", newline="") as src_file, open(dst, "w", newline="") as dst_file:
+                dst_file.write(src_file.read())
+
+    def create_expenses_records(self, year: int, initial_balance: float) -> None:
+        expenses_csv_path = os.path.join(
+            self.user_directory, str(year), self.EXPENSES_FILE_NAME
+        )
+
+        if os.path.exists(expenses_csv_path):
+            raise FileExistsError(f"The expenses records for {year} already exists.")
+        
+        os.makedirs(os.path.dirname(expenses_csv_path), exist_ok=True)
+
+        with open(expenses_csv_path, mode="w", newline="") as _:
+            pass
+
+        initial_balance_entry = ExpenseRecord(
+            timestamp=datetime.now(),
+            category=YearExpensesReport.INITIAL_BALANCE_LABEL,
+            date=f"{year}-01-01",
+            amount=initial_balance,
+            description=YearExpensesReport.INITIAL_BALANCE_LABEL,
+        )
+
+        YearExpensesReport.insert_expense(self, initial_balance_entry)
 
 class CategoryType(Enum):
     SAVINGS = "Savings"
@@ -79,31 +165,35 @@ class CategoryType(Enum):
 
 
 class Categories:
-    def __init__(self, account: User):
+    def __init__(self, account: User, year: int):
         self.account = account
         self.categories = []
         self.category_types = {}
 
-        self._load_categories()
+        self._load_categories(year)
 
-    def _load_categories(self) -> None:
+    def _load_categories(self, year: int) -> None:
         try:
-            self.filename = self.account.get_registered_categories_file()
+            self.filename = self.account.get_categories_file(year)
         except FileNotFoundError as e:
             raise e
 
         with open(self.filename, mode="r", newline="") as file:
             reader = csv.reader(file)
-            for idx, row in enumerate(reader):
-                if len(row) != 2:
+
+            for row, record in enumerate(reader):
+                # Empty line
+                if len(record) == 0:
                     continue
 
-                category = row[0].strip()
-                cat_type = row[1].strip().title()
+                if len(record) != 2:
+                    raise Exception(f"Cannot parse: {file.name}:{row + 1} - {len(record)} is not exactly 2 elements.")
+
+                category = record[0].strip()
+                cat_type = record[1].strip().title()
 
                 if not any(cat_type == item.value for item in CategoryType):
-                    print(f"Invalid category type {file.name}:{idx} - '{cat_type}'")
-                    continue
+                    raise Exception(f"Cannot parse: {file.name}:{row + 1} - Invalid category type {cat_type}.")
 
                 self.category_types.setdefault(cat_type, []).append(category)
 
@@ -163,7 +253,7 @@ class YearExpensesTotals:
             raise ValueError("Cannot add YearExpensesTotals of different lengths.")
 
         return YearExpensesTotals([a + b for a, b in zip(self.totals, other.totals)])
-    
+
     def __iadd__(self, other: "YearExpensesTotals") -> "YearExpensesTotals":
         if not isinstance(other, YearExpensesTotals):
             return NotImplemented
@@ -181,20 +271,20 @@ class YearExpensesTotals:
             raise ValueError("Cannot subtract YearExpensesTotals of different lengths.")
 
         return YearExpensesTotals([a - b for a, b in zip(self.totals, other.totals)])
-    
+
     def __mul__(self, other: float | int) -> "YearExpensesTotals":
         if not isinstance(other, (float, int)):
             return NotImplemented
-        
+
         return YearExpensesTotals([a * other for a in self.totals])
 
     def __iter__(self):
-        # Only iterate over months 1-12 (skip index 0, which is empty string in calendar.month_name)
         return iter(self.totals)
 
 
 class YearExpensesReport:
     INITIAL_BALANCE_LABEL = "Initial Balance"
+    BACKUP_FILE_SUFFIX = ".bak"
 
     def __init__(self, account: User, year: int):
         self.account: User = account
@@ -209,15 +299,19 @@ class YearExpensesReport:
     def _load_expenses(self, year: int) -> None:
         try:
             self.filename = self.account.get_expenses_report_file(year)
-        except FileNotFoundError as e:
+        except Exception as e:
             raise e
 
         with open(self.filename, mode="r", newline="") as file:
             reader = csv.reader(file)
 
             for row, record in enumerate(reader):
-                if len(record) != 5:
+                # Empty line
+                if len(record) == 0:
                     continue
+
+                if len(record) != 5:
+                    raise Exception(f"Cannot parse: {file.name}:{row + 1} - {len(record)} is not exactly 5 elements.")
 
                 try:
                     expense = ExpenseRecord(
@@ -227,9 +321,8 @@ class YearExpensesReport:
                         amount=record[3],
                         description=record[4],
                     )
-                except (IndexError, ValueError) as reason:
-                    print(f"Cannot parse: {file.name}:{row} - {reason}.")
-                    continue
+                except Exception as reason:
+                    raise Exception(f"Cannot parse: {file.name}:{row + 1} - {reason}.")
 
                 if expense.category == self.INITIAL_BALANCE_LABEL:
                     self.initial_balance = expense.amount
@@ -250,33 +343,51 @@ class YearExpensesReport:
     def get_expenses_by_category_monthly_totals(self) -> dict[str, YearExpensesTotals]:
         return self.expenses_by_category_monthly_totals
 
-    def insert_expense(self, expense: ExpenseRecord) -> None:
-        if self.filename is None:
-            raise ValueError("Expenses file not loaded. Call load_expenses first.")
-
-        self.expenses_records.append(expense)
-        self.expenses_by_category_monthly_totals[expense.category][
-            expense.date.month - 1
-        ] += expense.amount
-
-        with open(self.filename, mode="a", newline="") as file:
-            writer = csv.writer(file)
-            writer.writerow(
-                [
-                    expense.timestamp.isoformat(),
-                    expense.category,
-                    expense.date.isoformat(),
-                    f"{expense.amount:.2f}",
-                    expense.description,
-                ]
-            )
-
     def get_expenses(self) -> list[ExpenseRecord]:
         return self.expenses_records
 
+    @staticmethod
+    def insert_expense(account: User, expenses: ExpenseRecord | list[ExpenseRecord], year: int | None = None) -> None:
+        if isinstance(expenses, list):
+            if not expenses:
+                return
+            year = year or expenses[0].date.year
+        else:
+            year = year or expenses.date.year
+            expenses = [expenses]
+
+        filename = account.get_expenses_report_file(year)
+        with open(filename, mode="a", newline="") as file:
+            writer = csv.writer(file)
+            for expense in expenses:
+                writer.writerow([
+                    expense.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+                    expense.category,
+                    expense.date.strftime("%Y-%m-%d"),
+                    f"{expense.amount:.2f}",
+                    expense.description,
+                ])
+
+    @staticmethod
+    def store_expenses(account:User, year: int, expenses: list[ExpenseRecord]) -> None:
+        expenses_record_file = account.get_expenses_report_file(year)
+
+        # Create a backup of the existing expenses record file
+        backup_path = expenses_record_file + YearExpensesReport.BACKUP_FILE_SUFFIX
+        if os.path.exists(expenses_record_file):
+            with open(expenses_record_file, "rb") as src, open(backup_path, "wb") as dst:
+                dst.write(src.read())
+
+        # Erase current file
+        with open(expenses_record_file, mode="r+", newline="") as file:
+            file.truncate(0)
+
+        # Replace current report with new content
+        YearExpensesReport.insert_expense(account, expenses, year)
+
 
 class Users:
-    user_config_file_name = "config.toml"
+    USER_CONFIG_FILE_NAME = "config.toml"
 
     def __init__(self):
         self._users_db = {}
@@ -288,7 +399,7 @@ class Users:
         with os.scandir(db_path) as entries:
             for entry in entries:
                 config_path = os.path.join(
-                    db_path, entry.name, self.user_config_file_name
+                    db_path, entry.name, self.USER_CONFIG_FILE_NAME
                 )
 
                 user = self._load_user(config_path)
@@ -296,7 +407,7 @@ class Users:
                     continue
 
                 self._users_db[user.id] = user
-                user.directory = os.path.join(db_path, entry.name)
+                user.user_directory = os.path.join(db_path, entry.name)
 
     def _load_user(self, config_path: str) -> User | None:
         if not os.path.exists(config_path):

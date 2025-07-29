@@ -3,15 +3,22 @@
 
 {% block content %}
 <main>
-<h1>Login:</h1>
-{% if message %}
-<h2>{{ message }}</h2>
-{% endif %}
+  <form method="POST" style="width: 200px" class="standard-form">
+    {{ form.hidden_tag() }}
 
-<form method="POST">
-  {{ form.username.label }} {{ form.username() }}<br>
-  {{ form.password.label }} {{ form.password() }}<br>
-  <input type="submit" value="Login">
-</form>
+    <h1>Login:</h1>
+    {% if message %}
+    <h2>{{ message }}</h2>
+    {% endif %}
+    <div class="form-group">
+      <label>{{ form.username.label }}:</label> {{ form.username() }}<br>
+    </div>
+    <div class="form-group">
+      <label>{{ form.password.label }}:</label>{{ form.password() }}
+    </div>
+    <div class="form-group">
+      {{ form.submit() }}
+    </div>
+  </form>
 </main>
 {% endblock %}

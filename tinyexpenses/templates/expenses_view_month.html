@@ -3,16 +3,27 @@
 <script>
     year_expenses = {}
 </script>
-<div class="table-container">
-    <table border="1" id="expenses-table">
+<div class="middle-container">
+    <table>
         <thead>
             <tr>
-                <th colspan="15" class="time-span-header">
-                    <select id="year-select" onchange="location = this.value;">
+                <th colspan="3" class="time-span-header">
+                    <select id="year-select"
+                        onchange="location = this.value + '/' + (document.getElementById('month-select').selectedIndex + 1);">
                         {% for available_year in available_years %}
-                        <option value="{{ url_for('main.view_year', year=available_year) }}" {% if
+                        <option value="{{ url_for('main.expenses_view_year', year=available_year) }}" {% if
                             available_year|int==year|int %}selected{% endif %}>
                             {{ available_year }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    /
+                    <select id="month-select"
+                        onchange="location = document.getElementById('year-select').value + '/' + (this.selectedIndex + 1);">
+                        {% for i in range(12) %}
+                        <option value="{{ url_for('main.expenses_view_month', year=year, month=loop.index) }}" {% if
+                            loop.index0==month %}selected{% endif %}>
+                            {{ month_names[i] }}
                         </option>
                         {% endfor %}
                     </select>
@@ -21,94 +32,72 @@
             <tr>
                 <th class="category">Category</th>
                 <th class="category-type">Type</th>
-                {% for i in range(12) %}
-                <th class="month"><a href="{{ url_for('main.view_month', year=year, month=(i + 1)) }}">{{ month_names[i]
-                        }}</a></th>
-                {% endfor %}
-                <th class="total">Total</th>
+                <th class="month">{{ month_names[month] }}
+                </th>
             </tr>
         </thead>
         <tbody>
             {% for category_type, categories_by_type in expenses_monthly_totals_by_category_type.items() %}
             {% for category, totals in categories_by_type.items() %}
             <tr class="category-row {{ category_type.value }}">
-                <td class="category">{{ category }}</td>
+                <td>{{ category }}</td>
                 <td class="category-type">{{ category_type.value[0] }}</td>
-                {% for value in totals %}
                 <td class="expense-cell">
-                    {% if value and category_type != CategoryType.INCOME %}-{% endif %}{{ value | round(2) }} {{
-                    currency }}
-                </td>
-                {% endfor %}
-                <td class="total-cell">
-                    {% set total = totals | sum %}
-                    {% if total and category_type != CategoryType.INCOME %}-{% endif %}{{ total | round(2) }} {{
-                    currency }}
-                </td>
+                    {% if totals[month] and category_type != CategoryType.INCOME %}-{% endif %}{{ totals[month] |
+                    round(2)
+                    }} {{ currency }}
             </tr>
             {% endfor %}
             {% endfor %}
 
             <tr class="row-separator">
-                <td colspan="15" class="current-balance">💸 Current balance: {{ current_balance | round(2) |
-                    format_number}} {{ currency }}</td>
+                <td colspan="3" class="current-balance">💸 Current balance: {{ current_balance | round(2) |
+                    format_number}}
+                    {{ currency }}</td>
             </tr>
 
             <tr class="total-by-month-row">
                 <td colspan="2" class="total-cell">Total</td>
-                {% for value in monthly_balance %}
-                <td class="total-cell">{{ value | round(2) | format_number }} {{ currency }}</td>
-                {% endfor %}
                 <td class="total-cell">{{ monthly_balance | sum | round(2) | format_number }} {{ currency }}</td>
             </tr>
 
             <tr class="row-separator">
-                <td colspan="15"><canvas id="regionBar" style="width: 100%; height: 20px;"></canvas></td>
+                <td colspan="3"><canvas id="regionBar" style="width: 100%; height: 20px;"></canvas></td>
             </tr>
 
             {% for category_type, totals in monthly_balance_per_category_type.items() %}
             <tr class="category-row {{ category_type.value }}">
                 <td colspan="2" rowspan="{% if category_type != CategoryType.INCOME %}2{% else %}1{% endif %}">{{
                     category_type.value }}</td>
-                {% for val in totals %}
-                <td>{{ val | round(2) | format_number }} {{ currency }}</td>
-                {% endfor %}
-                <td>{{ totals | sum | round(2) | format_number }} {{ currency }}</td>
+                <td>{{ totals[month] | round(2) | format_number }} {{ currency }}</td>
             </tr>
 
             {% if category_type != CategoryType.INCOME %}
             <tr class="category-row {{ category_type.value }}">
-                {% for i in range(12) %}
                 <td>
-                    {% set income = monthly_balance_per_category_type[CategoryType.INCOME][i] %}
-                    {% set expense = totals[i] | abs %}
+                    {% set income = monthly_balance_per_category_type[CategoryType.INCOME][month] %}
+                    {% set expense = totals[month] | abs %}
                     {% if income > 0 %}
                     {{ (expense / income * 100) | round(1) | format_number }} %
-                    {% else %}
-                    0 %
-                    {% endif %}
-                </td>
-                {% endfor %}
-                <td>
-                    {% set income_total = monthly_balance_per_category_type[CategoryType.INCOME] | sum %}
-                    {% set exp_total = totals | sum | abs %}
-                    {% if income_total > 0 %}
-                    {{ (exp_total / income_total * 100) | round(1) | format_number }} %
+
                     <script>
-                        year_expenses["{{ category_type.value }}"] = {{ (exp_total / income_total * 100) | round(0) }};
+                        year_expenses["{{ category_type.value }}"] = {{ (expense / income * 100) | round(0) }};
                     </script>
                     {% else %}
                     0 %
                     {% endif %}
                 </td>
+
+
+
             </tr>
             {% endif %}
             {% endfor %}
 
+
         </tbody>
     </table>
 </div>
-
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const barColors = {};

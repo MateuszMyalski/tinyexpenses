@@ -1,11 +1,11 @@
-from flask import render_template
+from flask import render_template, redirect, url_for
 from flask_login import current_user
 from .models import YearExpensesReport, Categories, CategoryType, YearExpensesTotals
 from .extensions import users_db
 import calendar
 
 
-def sort_monthly_expenses_by_category_types(
+def _sort_monthly_expenses_by_category_types(
     expenses_by_category: dict[str, YearExpensesTotals], categories: Categories
 ) -> dict[CategoryType, dict[str, YearExpensesTotals]]:
     result = {ct: {} for ct in CategoryType}
@@ -21,7 +21,7 @@ def sort_monthly_expenses_by_category_types(
     return result
 
 
-def calculate_yearly_expenses_stats(
+def _calculate_yearly_expenses_stats(
     expenses_monthly_totals_by_category_type: dict[
         CategoryType, dict[str, YearExpensesTotals]
     ],
@@ -46,7 +46,7 @@ def calculate_yearly_expenses_stats(
     return year_totals, monthly_balance, monthly_balance_per_category_type
 
 
-def expenses_view_year(year: int):
+def expenses_view_year_display(year: int):
     requested_user = users_db.get(current_user.id)
 
     if requested_user is None:
@@ -54,8 +54,16 @@ def expenses_view_year(year: int):
 
     try:
         year_report = YearExpensesReport(requested_user, int(year))
-        categories = Categories(requested_user)
-    except (FileNotFoundError, ValueError) as e:
+    except FileNotFoundError as _:
+        return redirect(url_for("main.expenses_create", year=year))
+    except Exception as e:
+        return render_template("error.html", message=str(e))
+
+    try:
+        categories = Categories(requested_user, int(year))
+    except FileNotFoundError as _:
+        return redirect(url_for("main.categories_create", year=year))
+    except Exception as e:
         return render_template("error.html", message=str(e))
 
     expenses_monthly_totals_by_category = (
@@ -69,16 +77,16 @@ def expenses_view_year(year: int):
 
     expenses_monthly_totals_by_category_type: dict[
         CategoryType, dict[str, YearExpensesTotals]
-    ] = sort_monthly_expenses_by_category_types(
+    ] = _sort_monthly_expenses_by_category_types(
         expenses_monthly_totals_by_category, categories
     )
 
     year_totals, monthly_balance, monthly_balance_per_category_type = (
-        calculate_yearly_expenses_stats(expenses_monthly_totals_by_category_type)
+        _calculate_yearly_expenses_stats(expenses_monthly_totals_by_category_type)
     )
 
     return render_template(
-        "view_year.html",
+        "expenses_view_year.html",
         year=year,
         expenses_monthly_totals_by_category_type=expenses_monthly_totals_by_category_type,
         year_totals=year_totals,
@@ -86,28 +94,34 @@ def expenses_view_year(year: int):
         monthly_balance_per_category_type=monthly_balance_per_category_type,
         currency=requested_user.currency,
         title=f"{year} expenses",
-        available_years=requested_user.get_available_expenses_year_reports(),
+        available_years=requested_user.get_available_expenses_reports(),
         current_balance=year_report.initial_balance + sum(monthly_balance),
         CategoryType=CategoryType,
-        month_names=calendar.month_name[1:]
+        month_names=calendar.month_name[1:],
     )
 
 
-def expenses_view_month(year: int, month: int):
+def expenses_view_month_display(year: int, month: int):
     requested_user = users_db.get(current_user.id)
 
     if requested_user is None:
         return render_template("error.html", message="User not found.")
 
     try:
-        month = int(month)
-
-        if month not in range(1, len(calendar.month_name)):
+        if int(month) not in range(1, len(calendar.month_name)):
             raise ValueError(f"Invalid month number {month}")
 
         year_report = YearExpensesReport(requested_user, int(year))
-        categories = Categories(requested_user)
-    except (FileNotFoundError, ValueError) as e:
+    except FileNotFoundError as _:
+        return redirect(url_for("main.expenses_create", year=year))
+    except Exception as e:
+        return render_template("error.html", message=str(e))
+
+    try:
+        categories = Categories(requested_user, int(year))
+    except FileNotFoundError as _:
+        return redirect(url_for("main.categories_create", year=year))
+    except Exception as e:
         return render_template("error.html", message=str(e))
 
     expenses_monthly_totals_by_category = (
@@ -121,26 +135,26 @@ def expenses_view_month(year: int, month: int):
 
     expenses_monthly_totals_by_category_type: dict[
         CategoryType, dict[str, YearExpensesTotals]
-    ] = sort_monthly_expenses_by_category_types(
+    ] = _sort_monthly_expenses_by_category_types(
         expenses_monthly_totals_by_category, categories
     )
 
     year_totals, monthly_balance, monthly_balance_per_category_type = (
-        calculate_yearly_expenses_stats(expenses_monthly_totals_by_category_type)
+        _calculate_yearly_expenses_stats(expenses_monthly_totals_by_category_type)
     )
 
     return render_template(
-        "view_month.html",
+        "expenses_view_month.html",
         year=year,
-        month=month - 1,
+        month=int(month) - 1,
         expenses_monthly_totals_by_category_type=expenses_monthly_totals_by_category_type,
         year_totals=year_totals,
         monthly_balance=monthly_balance,
         monthly_balance_per_category_type=monthly_balance_per_category_type,
         currency=requested_user.currency,
         title=f"{month}/{year} expenses",
-        available_years=requested_user.get_available_expenses_year_reports(),
+        available_years=requested_user.get_available_expenses_reports(),
         current_balance=year_report.initial_balance + sum(monthly_balance),
         CategoryType=CategoryType,
-        month_names=calendar.month_name[1:]
+        month_names=calendar.month_name[1:],
     )
