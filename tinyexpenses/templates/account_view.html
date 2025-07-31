@@ -1,0 +1,85 @@
+{% extends "index.html" %}
+{% block content %}
+<main>
+    <h1 class="page-title">Profile settings</h1>
+
+    <div class="config-segment">
+        <h2>Account <i>{{ username }}</i> details</h2>
+        <form method="POST" class="config-form">
+            {{ form_details.hidden_tag() }}
+
+            {{ form_details.full_name.label }}
+            {{ form_details.full_name() }}
+
+            {{ form_details.currency.label }}
+            {{ form_details.currency() }}
+
+            {{ form_details.submit() }}
+        </form>
+    </div>
+
+    <div class="config-segment">
+        <h2>Change password</h2>
+        <form method="POST" class="config-form">
+            {{ form_change_password.hidden_tag() }}
+
+            {{ form_change_password.current_passw.label }}
+            {{ form_change_password.current_passw() }}
+
+            {{ form_change_password.new_passw.label }}
+            {{ form_change_password.new_passw() }}
+
+            {{ form_change_password.confirm.label }}
+            {{ form_change_password.confirm() }}
+
+
+            {{ form_change_password.submit() }}
+        </form>
+    </div>
+
+
+    <div class="config-segment">
+        <h2>API token</h2>
+        <p>Once you generate your token, it lasts a lifetime. The only way to change it is by manually regenerating a
+            new one. Just a heads up: after it's created and shown to you, it won’t come back up again. So, make sure
+            you copy it and save it somewhere safe!</p>
+        <form method="POST" class="config-form">
+            {{ form_api_token.hidden_tag() }}
+
+            {{ form_api_token.token.label }}
+            {{ form_api_token.token() }}
+            {{ form_api_token.submit() }}
+        </form>
+
+        <details name="api-details">
+            <summary>Append expense - example request</summary>
+            <pre>
+PUT {{ host_url }}v1.0/{{ username }}/expenses/append HTTP/1.1
+X-API-Key: (Here put your X-API key)
+Content-type: application/json
+Content-Length: (length of the JSON content)
+
+{
+  "category": "sample-category",
+  "expense_date": "01-01-2025",
+  "amount": "-12.3",
+  "description": "Anything"
+}
+            </pre>
+            Fields: "expense_date" and "description" are optional.
+        </details>
+    </div>
+
+    <div class="config-manual">
+        <h3>How does it works?</h3>
+        <p>Book keeping expenses must be simple, fast and robost.</p>
+
+        <p>Each year consists two files expenses and categories. Every category can be assigned into one of four
+            category types: <b>income</b>, <b>wants</b>, <b>savings</b> and <b>needs</b>.</p>
+
+        <p><u>Your goal: keep the the rule 50/30/20</u> - 50% for needs, 30% for wants and 20% for savings.</p>
+    </div>
+
+</main>
+
+{% endblock %}

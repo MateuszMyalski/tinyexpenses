@@ -1,3 +1,6 @@
-{% for info in infos %}
-<div class="info-message">ℹ️ {{ info }}</div>
+
+{% if infos | length > 0 %}
+{% for type, info in infos %}
+<div class="info-message {{ type }}">{{ info }}</div>
 {% endfor %}
+{% endif %}

@@ -4,7 +4,8 @@
     year_expenses = {}
 </script>
 <div class="middle-container">
-    <table>
+    <h1 class="page-title centered">Monthly view</h1>
+    <table class="expenses-view month">
         <thead>
             <tr>
                 <th colspan="3" class="time-span-header">
@@ -40,25 +41,27 @@
             {% for category_type, categories_by_type in expenses_monthly_totals_by_category_type.items() %}
             {% for category, totals in categories_by_type.items() %}
             <tr class="category-row {{ category_type.value }}">
-                <td>{{ category }}</td>
-                <td class="category-type">{{ category_type.value[0] }}</td>
-                <td class="expense-cell">
+                <td class="category-cell">{{ category }}</td>
+                <td class="category-type-cell">{{ category_type.value[0] }}</td>
+                <td class="amount-cell">
                     {% if totals[month] and category_type != CategoryType.INCOME %}-{% endif %}{{ totals[month] |
                     round(2)
                     }} {{ currency }}
+                </td>
             </tr>
             {% endfor %}
             {% endfor %}
 
             <tr class="row-separator">
-                <td colspan="3" class="current-balance">💸 Current balance: {{ current_balance | round(2) |
+                <td colspan="3" class="current-balance-cell">💸 Current balance: {{ current_balance | round(2) |
                     format_number}}
                     {{ currency }}</td>
             </tr>
 
             <tr class="total-by-month-row">
-                <td colspan="2" class="total-cell">Total</td>
-                <td class="total-cell">{{ monthly_balance | sum | round(2) | format_number }} {{ currency }}</td>
+                <td colspan="2" class="category-cell">Total</td>
+                <td class="total-amount-cell">{{ monthly_balance[month] | round(2) | format_number }} {{ currency }}
+                </td>
             </tr>
 
             <tr class="row-separator">
@@ -67,14 +70,15 @@
 
             {% for category_type, totals in monthly_balance_per_category_type.items() %}
             <tr class="category-row {{ category_type.value }}">
-                <td colspan="2" rowspan="{% if category_type != CategoryType.INCOME %}2{% else %}1{% endif %}">{{
+                <td colspan="2" class="category-cell"
+                    rowspan="{% if category_type != CategoryType.INCOME %}2{% else %}1{% endif %}">{{
                     category_type.value }}</td>
-                <td>{{ totals[month] | round(2) | format_number }} {{ currency }}</td>
+                <td class="total-amount-cell">{{ totals[month] | round(2) | format_number }} {{ currency }}</td>
             </tr>
 
             {% if category_type != CategoryType.INCOME %}
             <tr class="category-row {{ category_type.value }}">
-                <td>
+                <td class="total-amount-prcnt-cell">
                     {% set income = monthly_balance_per_category_type[CategoryType.INCOME][month] %}
                     {% set expense = totals[month] | abs %}
                     {% if income > 0 %}
@@ -98,58 +102,7 @@
         </tbody>
     </table>
 </div>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const barColors = {};
-        Object.keys(year_expenses).forEach(type => {
-            barColors[type] = getComputedStyle(document.querySelector("tr.category-row." + type)).backgroundColor;
-        });
 
-        const canvas = document.getElementById("regionBar");
-        const ctx = canvas.getContext("2d");
-
-        // Ensure canvas scales with device pixel ratio
-        const width = canvas.offsetWidth;
-        const height = canvas.offsetHeight;
-        canvas.width = width;
-        canvas.height = height;
-
-        const total = Object.values(year_expenses).reduce((sum, val) => sum + val, 0);
-
-        Object.keys(year_expenses).forEach(key => {
-            year_expenses[key] = year_expenses[key] / total;
-        });
-
-        const used = Object.values(year_expenses).reduce((sum, val) => sum + val, 0);
-        year_expenses["Other"] = 1 - used;
-
-
-        const regions = [
-            { name: "Needs", color: barColors["Needs"], portion: year_expenses["Needs"] },
-            { name: "Wants", color: barColors["Wants"], portion: year_expenses["Wants"] },
-            { name: "Savings", color: barColors["Savings"], portion: year_expenses["Savings"] },
-            { name: "Other", color: "gray", portion: year_expenses["Other"] },
-        ];
-
-        let x = 0;
-        regions.forEach(region => {
-            const regionWidth = width * region.portion;
-            ctx.fillStyle = region.color;
-            ctx.fillRect(x, 0, regionWidth, height);
-
-            ctx.font = "bold 16px Arial";
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillStyle = 'black'
-
-
-            if (region.portion >= 0.05) {
-                ctx.fillText(Math.round(year_expenses[region.name] * 100, 1) + " %", x + regionWidth / 2, canvas.height / 2 + 2);
-            }
-
-            x += regionWidth;
-        });
-    });
-</script>
+<script src="{{ url_for('static', filename='bar_graph.js') }}"></script>
 
 {% endblock %}

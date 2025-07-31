@@ -1,0 +1,40 @@
+{% extends "index.html" %}
+
+{% block content %}
+<h1 class="page-title centered">CSV editor</h1>
+<div class="huge-table-wrapper">
+    <table id="csv-view">
+        <thead>
+            <tr>
+                <th></th>
+                <th></th>
+                {% for label in col_labels %}
+                <th>{{ label }}</th>
+                {% endfor %}
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in content %}
+            <tr class="source">
+                <td class="row-number-cell"></td>
+                <td class="button remove"><input type="button" value="[-]" onclick="deleteRow(this)" /></td>
+                {% for data in row %}
+                <td contenteditable="true" class="data">{{ data }}</td>
+                {% endfor %}
+                <td class="button add"><input type="button" value="[+]" onclick="insertRow(this)" /></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<form method="POST" class="csv-edit-form">
+    {{ form.hidden_tag() }}
+    {{ form.table_data() }}
+    {{ form.submit() }}
+</form>
+
+<script src="{{ url_for('static', filename='csv_editor.js') }}"></script>
+
+{% endblock %}

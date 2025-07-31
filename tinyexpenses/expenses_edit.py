@@ -1,19 +1,15 @@
 from flask import render_template, redirect, url_for
 from flask_login import current_user
-from flask_wtf import FlaskForm
-from wtforms import (
-    SubmitField,
-    HiddenField,
-)
-
-from tinyexpenses.models import User
+from .models.accounts import User
 from .extensions import users_db
-from .models import YearExpensesReport, ExpenseRecord
-import json
+from .models.expenses import YearExpensesReport, ExpenseRecord
+from .csv_edit import render_csv_data_edit_form, handle_csv_data_edit
 
-class FileEditForm(FlaskForm):
-    table_data = HiddenField("Table Data")
-    submit = SubmitField("Save")
+
+def _store_expenses_data_cb(ctx: dict, data: str):
+    expenses = [ExpenseRecord(*row) for row in data]
+
+    YearExpensesReport.store(ctx["db_file"], expenses)
 
 
 def edit_expenses(year: int):
@@ -22,27 +18,16 @@ def edit_expenses(year: int):
     if requested_user is None:
         return render_template("error.html", message="User not found.")
 
-    form = FileEditForm()
+    year_expenses_file = requested_user.get_expenses_report_file(year)
 
-    if not form.validate_on_submit():
-        return render_template(
-            "expenses_create.html", form=form, year=year, infos=["Request could not be validated."]
-        )
+    if not year_expenses_file.exists():
+        return redirect(url_for("main.expenses_create", year=year))
 
-
-    modified_expenses = []
-
-    try:
-        table_data = json.loads(form.table_data.data)
-        for row in table_data:
-            modified_expenses.append(ExpenseRecord(*row))
-        
-        YearExpensesReport.store_expenses(requested_user, int(year), modified_expenses)
-
-    except Exception as e:
-        return render_template("error.html", message=str(e))
-
-    return redirect(url_for("main.expenses_edit", year=year))
+    return handle_csv_data_edit(
+        url_for("main.expenses_edit", year=year),
+        _store_expenses_data_cb,
+        {"db_file": year_expenses_file},
+    )
 
 
 def edit_expenses_form(year: int):
@@ -51,13 +36,15 @@ def edit_expenses_form(year: int):
     if requested_user is None:
         return render_template("error.html", message="User not found.")
 
-    try:
-        expenses = YearExpensesReport(requested_user, int(year)).get_expenses()
-    except FileNotFoundError:
+    year_expenses_file = requested_user.get_expenses_report_file(year)
+
+    if not year_expenses_file.exists():
         return redirect(url_for("main.expenses_create", year=year))
-    except Exception as e:
-        return render_template("error.html", message=str(e))
 
-    form = FileEditForm()
+    year_expenses: list[ExpenseRecord] = YearExpensesReport(
+        year_expenses_file
+    ).get_expenses()
 
-    return render_template("expenses_edit.html", form=form, expenses=expenses)
+    return render_csv_data_edit_form(
+        [col.label for col in ExpenseRecord.Columns], year_expenses
+    )

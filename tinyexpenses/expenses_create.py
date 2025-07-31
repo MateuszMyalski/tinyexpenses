@@ -25,18 +25,14 @@ def create_new_year_report(year: int):
             "expenses_create.html",
             form=form,
             year=year,
-            infos=["Request could not be validated."],
+            infos=[("error", "Request could not be validated.")],
         )
 
     requested_user = users_db.get(current_user.id)
     if requested_user is None:
         return render_template("error.html", message="User not found.")
 
-    try:
-        requested_user.create_expenses_records(year, form.initial_balance_amount.data)
-
-    except Exception as e:
-        return render_template("error.html", message=str(e))
+    requested_user.create_expenses_records(year, form.initial_balance_amount.data)
 
     return redirect(url_for("main.expenses_view_year", year=year))
 
@@ -47,12 +43,10 @@ def create_new_year_report_form(year: int):
     if requested_user is None:
         return render_template("error.html", message="User not found.")
 
-    try:
-        requested_user.get_expenses_report_file(int(year))
-    except FileNotFoundError:
-        form = SetInitialBalanceForm()
-        return render_template("expenses_create.html", form=form, year=year)
-    except Exception as e:
-        return render_template("error.html", message=str(e))
+    expenses_file = requested_user.get_expenses_report_file(year)
 
-    return redirect(url_for("main.expenses_view_year", year=year))
+    if expenses_file.exists():
+        return redirect(url_for("main.expenses_view_year", year=year))
+
+    form = SetInitialBalanceForm()
+    return render_template("expenses_create.html", form=form, year=year)

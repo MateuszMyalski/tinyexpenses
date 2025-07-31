@@ -2,7 +2,7 @@
 
 {% block content %}
 <main>
-    <h1>Error!</h1>
+    <h1 class="page-title">Error!</h1>
     <p>
         Hey! Requested year <strong>{{ year }}</strong> <u>does not</u> exists!
     </p>
@@ -12,20 +12,18 @@
     </p>
 
     <p>
-        <i>You can always change it using <a href="{{ url_for('main.expenses_edit', year=year) }}">"Edit expenses"</a></i>
+        <i>You can always change it using <a href="{{ url_for('main.expenses_edit', year=year) }}">"Edit
+                expenses"</a></i>
     </p>
 
-    <form method="POST" style="width: 300px" class="standard-form">
+    <form method="POST" style="width: 300px" class="create-form middle">
         {{ form.hidden_tag() }}
 
-        <div class="form-group">
-            <label>{{ form.initial_balance_amount.label }}:</label>
-            {{ form.initial_balance_amount() }}
-        </div>
+        {{ form.initial_balance_amount.label }}
+        {{ form.initial_balance_amount() }}
 
-        <div class="form-group">
-            {{ form.submit() }}
-        </div>
+        {{ form.submit() }}
+
     </form>
 </main>
 {% endblock %}

@@ -2,29 +2,24 @@
 
 {% block content %}
 <main>
-  <h1>Append expense:</h1>
-  <form method="POST" style="width: 300px" class="standard-form">
+  <h1 class="page-title">Append expense:</h1>
+  <form method="POST" class="expenses-append-form">
     {{ form.hidden_tag() }}
 
-    <div class="form-group">
-      <label>{{ form.category.label }}:</label>
-      {{ form.category() }}
-    </div>
-    <div class="form-group">
-      <label>{{ form.date.label }}:</label>
-      {{ form.date(min=current_year ~ '-01-01', max=current_year ~ '-12-31') }}
-    </div>
-    <div class="form-group">
-      <label>{{ form.amount.label }}:</label>
-      {{ form.amount() }}
-    </div>
-    <div class="form-group">
-      <label>{{ form.description.label }}:</label>
-      {{ form.description() }}
-    </div>
-    <div class="form-group">
-      {{ form.submit() }}
-    </div>
+    {{ form.category.label }}
+    {{ form.category() }}
+
+    {{ form.expense_date.label }}
+    {{ form.expense_date(min=current_year ~ '-01-01', max=current_year ~ '-12-31') }}
+
+    {{ form.amount.label }}
+    {{ form.amount() }}
+
+    {{ form.description.label }}
+    {{ form.description() }}
+    <br />
+    {{ form.submit() }}
+
   </form>
 </main>
 {% endblock %}

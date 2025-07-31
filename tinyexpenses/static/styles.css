@@ -1,331 +1,433 @@
 :root {
-  --bg-color: #efffec;
+  --bg-color: #ffffff;
   --text-color: #000;
-  --link-color: #268bd2;
-  --link-hover-color: hotpink;
-  --header-border: #073642;
-  --hover-bg: #ff8d8d;
-  --income-color: #fff;
+  --accent1: #000;
+  --accent2: #ccc;
+  --footer-heart: #ff0000;
+
+  --info-bg-color: #d9edf7;
+  --info-border-color: #bce8f1;
+
+  --income-color: #d1d1d1;
   --wants-color: #ff8d8d;
   --savings-color: #f6ff7f;
   --needs-color: #8ca7ff;
-  --table-header-bg: #f0f0f0;
-  --footer-heart: #f82727;
+
 }
 
-/* Base Layout */
 body {
   background-color: var(--bg-color);
   color: var(--text-color);
-  font-family: monospace;
+
   font-size: 1em;
-  margin: 0 auto;
-  padding: 40px;
+  font-family: monospace;
+
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 30px;
 }
 
-/* Header */
-header {
+div.info-message {
+  background-color: var(--info-bg-color);
+
+  color: var(--text-color);
+  font-size: 1.1em;
+
+  border: 1px solid var(--info-border-color);
+  border-radius: 4px;
+
+  padding: 10px 15px;
+  margin: 10px 0;
+  
   width: 100%;
   max-width: 600px;
-  font-size: 1.3em;
+
+  box-sizing: border-box;
+}
+
+div.info-message.error::before {
+  content: "❗";
+  margin-right: 5px;
+}
+
+div.info-message.info::before {
+  content: "ℹ️";
+  margin-right: 5px;
+
+}
+
+h1.page-title {
+  margin-top: 0;
+}
+
+h1.page-title.centered {
   text-align: center;
 }
 
 header pre {
-  font-size: 0.5em;
-  display: flex;
-  justify-content: center;
-  user-select: none;
+  font-size: 1.2em;
   line-height: 1em;
+
+  margin: 0 auto;
+
+  user-select: none;
+
+  width: fit-content;
 }
 
-/* Navigation */
-nav {
+header nav {
+  border-bottom: 1px solid var(--accent1);
+
+  margin-top: 30px;
+
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  gap: 1em;
-  font-weight: bold;
-  margin-bottom: 1em;
-  border-bottom: 1px solid var(--header-border);
-  width: 100%;
+
+  font-size: 1.1em;
+  line-height: 2em;
+  padding: 0 0.5em;
 }
 
-nav a {
-  color: var(--link-color);
+header nav a {
   text-decoration: none;
 }
 
-main {
-  width: 100%;
-  max-width: 600px; /* same as header/footer */
-  padding: 0 1rem;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Selects */
-select#year-select,
-select#month-select {
-  font-size: inherit;
-  border: none;
-  background: transparent;
-  font-weight: inherit;
-  margin: 0;
-  padding: 0;
-}
-
-/* Dashboard Menu */
-ul.dashboard-menu {
-  font-size: 1.3em;
-  list-style: square;
-  padding-left: 1.2em;
-}
-
-ul.dashboard-menu li {
-  margin: 0.5em 0;
-}
-
-ul.dashboard-menu li:hover {
-  background-color: var(--hover-bg);
-}
-
-ul.dashboard-menu li a {
-  text-decoration: none;
-  color: inherit;
-}
-
-/* Footer */
 footer {
-  width: 100%;
-  max-width: 600px;
-  margin-top: 2em;
+  border-top: 1px solid var(--accent1);
+  
   padding-top: 1em;
-  border-top: 1px solid var(--header-border);
+
   text-align: right;
+}
+
+footer,
+header,
+main {
+  max-width: 600px;
+  width: 100%;
 }
 
 footer span#heart {
   font-size: 1.2em;
+
   margin-left: 0.3em;
+
   color: var(--footer-heart);
 }
 
-/* Container */
-.middle-container {
-  width: 100%;
-  max-width: 600px;
+form.login-form,
+form.config-form,
+form.expenses-append-form,
+form.create-form {
   display: flex;
   flex-direction: column;
+
+  width: 50%;
+}
+
+form.middle {
   margin: 0 auto;
 }
 
-/* Table Layout */
-.table-wrapper {
-  width: 100%;
-  overflow-x: auto;
-}
-
-table {
-  border-collapse: collapse;
-  font-size: 0.9em;
-  margin: 20px auto;
-  width: fit-content;
-}
-
-
-table#csv-edit-table input[type="button"] {
-  padding: 5px;
-  margin: 0;
-  background-color: transparent;
-  border: 0;
-  filter: contrast(0.5);
-}
-
-table#csv-edit-table input[type="button"]:hover {
-  filter: contrast(2);
-}
-
-th, td {
-  padding: 0.5em;
-  min-width: 80px;
-  text-align: center;
-  white-space: nowrap;
-  border: 1px solid black;
-}
-
-table#csv-edit-table td.button {
-  padding: 5px;
-  min-width: 10px;
-  margin: 0;
-  border: none;
-}
-
-table#csv-edit-table tr:hover {
-  background-color: #ccc;
-}
-
-thead th {
-  background-color: var(--table-header-bg);
-}
-
-th a {
-  color: inherit;
-  text-decoration: none;
-}
-
-th a:hover {
-  color: var(--link-hover-color);
-}
-
-th.time-span-header {
-  font-size: 1.5em;
-  padding: 0;
-}
-
-tr.row-separator td {
-  height: 1.5em;
-}
-
-/* Sticky First Column */
-td.category {
-  position: sticky;
-  left: 0;
-  background-color: inherit;
-  z-index: 2;
-}
-
-/* Category Colors */
-tr.category-row.Income  { background-color: var(--income-color); }
-tr.category-row.Wants   { background-color: var(--wants-color); }
-tr.category-row.Savings { background-color: var(--savings-color); }
-tr.category-row.Needs   { background-color: var(--needs-color); }
-
-tr.category-row:hover {
-  filter: invert(2.38);
-  font-weight: bold;
-  transition: filter 0.2s ease;
-}
-
-/* Special Cells */
-td.total-cell {
-  font-weight: bold;
-  background-color: var(--table-header-bg);
-}
-
-td.current-balance {
-  font-size: 2em;
-  font-weight: bold;
-}
-
-th.category-type,
-td.category-type {
-  min-width: 10px;
-}
-
-/* Forms */
-form.standard-form {
-  font-family: monospace;
-  margin: 0 auto;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5em;
-  width: 100%;
-  max-width: 700px;
-}
-
-form.csv-edit-form {
-  font-family: monospace;
-  margin: 0 auto;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5em;
-  width: fit-content;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.form-group > label {
+form.login-form > label,
+form.config-form > label,
+form.expenses-append-form > label,
+form.create-form > label {
+  margin-top: 10px;
   margin-bottom: 2px;
+
   font-weight: bold;
+  text-transform: uppercase;
 }
 
-.form-group > input,
-.form-group > select,
-.form-group > textarea {
-  padding: 4px;
-  border: 1px solid #000;
-  background-color: #fff;
-  font-size: 14px;
+form.login-form > label:after,
+form.config-form > label:after,
+form.expenses-append-form > label:after,
+form.create-form > label:after {
+  content: ":";
+}
+
+form.config-form > input#token-token {
+  user-select: all;
+}
+
+form.login-form > input,
+form.config-form > input,
+form.expenses-append-form > input,
+form.expenses-append-form > select,
+form.expenses-append-form > textarea,
+form.expenses-append-form > input[type="date"],
+form.create-form > input,
+form.create-form > select {
+  background-color: var(--bg-color);
+
+  padding: 5px;
+
+  border-radius: 0;
+  border: 1px solid var(--accent1);
+
   width: 100%;
+
+  box-sizing: border-box;
+
+  font-size: 1em;
+}
+
+form.expenses-append-form > input[type="date"] {
+  -webkit-appearance: none;
+}
+
+form.login-form > input[type="submit"],
+form.config-form > input[type="submit"],
+form.expenses-append-form > input[type="submit"],
+form.create-form > input[type="submit"],
+form.csv-edit-form > input[type="submit"] {
+  background-color: var(--bg-color);
+  
+  width: 100%;
+  
+  margin-top: 0.5em;
+  padding: 6px 16px;
+  
+  cursor: pointer;
+  
+  color: var(--text-color);
+
+  font-size: 1.5em;
+  
+  border: 1px solid var(--accent1);
+  border-radius: 0;
+
   box-sizing: border-box;
 }
 
-.form-group > input[type="submit"] {
-  width: auto;
-  margin-top: 0.5em;
-  padding: 6px 16px;
+form.login-form > input[type="submit"]:hover,
+form.config-form > input[type="submit"]:hover,
+form.expenses-append-form > input[type="submit"]:hover,
+form.create-form > input[type="submit"]:hover,
+form.csv-edit-form > input[type="submit"]:hover {
+  filter: invert(2.0);
+}
+
+
+th.time-span-header > select {
+  background-color: var(--bg-color);
+
+  color: var(--text-color);
+
+  font-size: 1.2em;
+
+  padding: 3px;
+  margin: 3px;
+
+  border: 1px solid var(--accent1);
+  border-radius: 0;
+
+}
+
+ul.dashboard-menu li {
+  line-height: 2em;
+  font-size: 1.3em;
+
+  list-style: square;
+}
+
+ul.dashboard-menu a {
+  text-decoration: none;
+}
+
+ul.dashboard-menu a:hover {
+  font-weight: bold;
+}
+
+table#csv-view {
+  counter-reset: rowNumber -1;
+
+  text-align: center;
+  vertical-align: middle;
+}
+
+table#csv-view th,
+table#csv-view td {
+  padding: 0 0.8vw;
+
+  min-width: 2em;
+  white-space: nowrap;
+}
+
+table#csv-view tr {
+  counter-increment: rowNumber;
+
+  border-collapse: collapse;
+}
+
+table#csv-view tr:nth-child(even) {
+  background-color: var(--accent2);
+}
+
+table#csv-view td.button input[type="button"] {
+  background-color: transparent;
+  
   cursor: pointer;
-  color: inherit;
+  
+  color: var(--text-color);
+
+  font-size: inherit;
+  
+  border: none;
+  border-radius: 0;
+
+  box-sizing: border-box;
+
+  margin-right: 1em;
 }
 
-/* Info Message */
-.info-message {
-  background-color: #d9edf7;
-  color: #31708f;
-  border: 1px solid #bce8f1;
-  padding: 10px 15px;
-  margin: 10px 0;
-  border-radius: 4px;
-  font-family: sans-serif;
-  font-size: 14px;
+table#csv-view tr td.row-number-cell:first-child::before {
+  content: counter(rowNumber);
+
+  margin-right: 1em;
+}
+
+table.expenses-view,
+table#csv-view {
+  border: 1px solid var(--text-color);
+  border-collapse: collapse;
+
+  margin: 0 auto;
+
+  font-size: 1.1em;
+}
+
+table.expenses-view thead tr th,
+table#csv-view thead tr th {
+  text-transform: uppercase;
+}
+
+table.expenses-view tr,
+table#csv-view tr {
+  border: 1px solid var(--text-color);
+}
+
+table.expenses-view.year td {
+  border: 1px dashed var(--text-color);
+}
+
+table.expenses-view.year td.category-cell {
+  position: sticky;
+  z-index: 2;
+  left: 0;
+
+  background-color: inherit;
+
+  text-transform: uppercase;
+}
+
+table.expenses-view.year th:not(.category-type-header),
+table.expenses-view.year td:not(.category-type-cell) {
+  min-width: 100px;
+  white-space: nowrap;
+}
+
+table.expenses-view td.category-cell{
+  font-weight: bold;
+}
+
+table.expenses-view td.category-type-cell{
+  text-align: center;
+}
+
+table.expenses-view td.amount-cell,
+table.expenses-view td.amount-prcnt-cell,
+table.expenses-view td.total-amount-cell,
+table.expenses-view td.total-amount-prcnt-cell {
+  text-align: right;
+}
+
+table.expenses-view td.total-amount-cell,
+table.expenses-view td.total-amount-prcnt-cell {
+  font-weight: bold;
+}
+
+table.expenses-view td.current-balance-cell {
+  text-align: center;
+  font-size: 1.2em;
+}
+
+table.expenses-view tbody td {
+  padding: 0.2em 0.5em;
+}
+
+tr.category-row:hover {
+  filter: invert(2.38);
+
+  font-weight: bold;
+
+  transition: filter 0.2s ease;
+}
+
+table.expenses-view tr.category-row.Income {
+  background-color: var(--income-color);
+}
+
+table.expenses-view tr.category-row.Wants {
+  background-color: var(--wants-color);
+}
+
+table.expenses-view tr.category-row.Savings {
+  background-color: var(--savings-color);
+}
+
+table.expenses-view tr.category-row.Needs {
+  background-color: var(--needs-color);
+}
+table.expenses-view tr.total-by-month-row {
+  background-color: var(--bg-color);
+}
+
+.huge-table-wrapper{
+  overflow-x: auto;
+
   width: 100%;
-  max-width: 600px;
 }
 
-/* Responsive */
+.config-segment {
+  border-bottom: 1px solid var(--accent1);
+  
+  width: 100%;
+
+  padding-bottom: 10%;
+}
+
+.config-segment > details[name="api-details"] {
+  margin: 10px 0;
+}
+
+.config-segment > details[name="api-details"] > pre {
+  padding: 5px;
+
+  word-break: break-all;
+  white-space: pre-wrap;
+
+  border: solid 1px var(--accent2)
+}
+
 @media (max-width: 600px) {
+
   body {
-    padding: 20px;
-    font-size: 0.95em;
+    min-width: 300px;
   }
 
-  header,
-  footer,
-  .info-message {
-    width: 100%;
+  header pre {
+    font-size: 0.5em;
   }
 
-  nav {
-    flex-direction: column;
-    align-items: center;
-    font-size: 1.2em;
-    gap: 0.5em;
+  form.login-form,
+  form.config-form,
+  form.expenses-append-form,
+  form.create-form {
+    width: 80%;
   }
 
-  ul.dashboard-menu {
-    font-size: 1.1em;
-    padding-left: 1em;
-  }
-
-  td.current-balance {
-    font-size: 1.5em;
-  }
-
-  th.time-span-header {
-    font-size: 1.2em;
-  }
-
-  table {
-    font-size: 0.85em;
-  }
 }

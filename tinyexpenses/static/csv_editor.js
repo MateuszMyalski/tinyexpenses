@@ -5,10 +5,8 @@
  * @description Provides interactive CSV table editing functionality, including row insertion, deletion, cell modification tracking, and data serialization for form submission.
  */
 
-const TABLE_ID = "csv-edit-table";
+const TABLE_ID = "csv-view";
 const DATA_CELL_CLASS = "data";  // class for serializable <td>
-const EDITABLE_CELL_RANGE = [3, 6];  // inclusive: category to description
-const TIMESTAMP_INDEX = 2;
 const ROW_INDEX = 1;
 const SOURCE_ROW_CLASS = "source";
 
@@ -24,7 +22,6 @@ function deleteRow(button) {
 
     const row = button.closest("tr");
     row.remove();
-    updateRowNumbers();
 
     diff.prevTableData = getTableData();
 
@@ -41,25 +38,14 @@ function insertRow(button) {
     const currentRow = button.closest("tr");
     const newRow = currentRow.cloneNode(true);
     newRow.className = "";
-
-    const cells = newRow.querySelectorAll("td");
-    for (let i = EDITABLE_CELL_RANGE[0]; i <= EDITABLE_CELL_RANGE[1]; i++) {
-        cells[i].innerText = "";
-    }
-    cells[TIMESTAMP_INDEX].innerText = getCurrentTimestamp();
+    newRow.querySelectorAll("td." + DATA_CELL_CLASS).forEach(cell => {
+        cell.innerText = "";
+    })
 
     currentRow.parentNode.insertBefore(newRow, currentRow.nextSibling);
-    updateRowNumbers();
 
     diff.prevTableData = getTableData();
     diff.addedRows += 1;
-}
-
-function updateRowNumbers() {
-    const rows = document.querySelectorAll(`#${TABLE_ID} tbody tr`);
-    rows.forEach((row, index) => {
-        row.cells[ROW_INDEX].innerText = index + 1;
-    });
 }
 
 function getTableData() {
