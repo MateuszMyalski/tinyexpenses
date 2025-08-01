@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "TinyExpenses"
+version = "0.1.0"
+description = "A lightweight Flask-based expense tracker"
+authors = [
+  { name = "Mateusz Myalski" }
+]
+readme = "README.md"
+requires-python = ">=3.8"
+
+dependencies = [
+  "blinker",
+  "click",
+  "Deprecated",
+  "Flask",
+  "Flask-Limiter",
+  "Flask-Login",
+  "Flask-WTF",
+  "itsdangerous",
+  "Jinja2",
+  "limits",
+  "markdown-it-py",
+  "MarkupSafe",
+  "mdurl",
+  "ordered-set",
+  "packaging",
+  "Pygments",
+  "python-dateutil",
+  "rich",
+  "six",
+  "tomli_w",
+  "typing_extensions",
+  "Werkzeug",
+  "wrapt",
+  "WTForms",
+]
+
+[project.scripts]
+tinyexpenses = "tinyexpenses.cli:main"
+
+[tool.setuptools]
+packages = ["tinyexpenses"]
+include-package-data = true
+
+[tool.setuptools.package-data]
+tinyexpenses = ["templates/**/*.html", "static/**/*"]

@@ -7,9 +7,6 @@ class DbFile:
     def __init__(self, file_path: str):
         self.dir = os.path.dirname(file_path)
 
-        if not os.path.exists(self.dir):
-            raise FileNotFoundError(f"Provided dir does not exist {self.dir}")
-
         self.file_name = os.path.basename(file_path)
         self.file_path = os.path.join(self.dir, self.file_name)
         self.backup_file_path = os.path.join(
@@ -22,6 +19,8 @@ class DbFile:
     def create(self):
         if self.exists():
             raise FileExistsError(f"File {self.file_path} already exists.")
+
+        os.makedirs(os.path.dirname(self.file_path), exist_ok=True)
 
         with open(self.file_path, mode="w", newline="") as _:
             pass

@@ -5,7 +5,7 @@ from flask_limiter.util import get_remote_address
 from flask import Blueprint
 from .models.accounts import Users
 
-app = Flask(__name__)
+app = Flask(__name__, instance_relative_config=True)
 
 login_manager = LoginManager()
 
@@ -16,7 +16,7 @@ users_db = Users()
 limiter = Limiter(
     get_remote_address,
     app=app,
-    default_limits=["2 per minute", "1 per second"],
+    default_limits=["50 per minute"],
     storage_uri="memory://",
     strategy="fixed-window"
 )

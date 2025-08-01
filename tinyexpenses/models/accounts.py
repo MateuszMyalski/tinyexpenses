@@ -52,7 +52,7 @@ class Config:
     def check_password(self, password: str) -> bool:
         return check_password_hash(self.get_password_hash(), password)
 
-    def set_password(self, current_password: str, new_password: str) -> bool:
+    def change_password(self, current_password: str, new_password: str) -> bool:
         if not self.check_password(current_password):
             return False
 
@@ -72,6 +72,45 @@ class Config:
     
     def check_token(self, token):
         return token == self._get_token()
+
+class ConfigCreator(Config):
+    def __init__(self, db_file: DbFile):
+        if not os.path.exists(db_file.dir):
+            raise FileNotFoundError(f"Provided dir does not exist: {db_file.dir}")
+
+        if db_file.exists():
+            # Load existing config via base class
+            self._data = self._load()
+        else:
+            self._data = {
+                "user": {
+                    "username": "",
+                    "full_name": "",
+                    "active": True,
+                    "password_hash": "",
+                    "currency": "",
+                    "api_token": "",
+                }
+            }
+
+        with open(db_file.get_path(), "wb") as f:
+            tomli_w.dump(self._data, f)
+
+        super().__init__(db_file)
+
+    def set_username(self, username: str):
+        self._data["user"]["username"] = username
+        self._save()
+
+    def set_password(self, password: str):
+        self._data["user"]["password_hash"] = generate_password_hash(password)
+        self._save()
+
+    def generate_api_token(self) -> str:
+        token = secrets.token_urlsafe(32)
+        self._data["user"]["api_token"] = token
+        self._save()
+        return token
 
 
 class User(flask_login.UserMixin):
@@ -99,7 +138,7 @@ class User(flask_login.UserMixin):
         return self.config.check_password(password)
 
     def set_password(self, current: str, new: str) -> bool:
-        return self.config.set_password(current, new)
+        return self.config.change_password(current, new)
 
     def set_full_name(self, name: str):
         self.config.set_full_name(name)
@@ -173,7 +212,7 @@ class User(flask_login.UserMixin):
         )
 
         # There might be a folder but empty
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        # os.makedirs(os.path.dirname(file_path), exist_ok=True)
 
         expenses_file = DbFile(file_path)
         expenses_file.create()

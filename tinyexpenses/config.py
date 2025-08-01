@@ -1,0 +1,11 @@
+import os
+
+class Config:
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'unsafe-default-key')
+    ACCOUNTS_DB_DIRECTORY_PATH = "accounts"
+
+class ProductionConfig(Config):
+    DEBUG = False
+
+class DevelopmentConfig(Config):
+    DEBUG = True
