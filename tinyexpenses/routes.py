@@ -1,6 +1,6 @@
 from datetime import datetime
 from flask import request, render_template, redirect, url_for, jsonify
-from flask_login import login_required, current_user
+from flask_login import login_required
 from functools import wraps
 from werkzeug import Response
 from .expenses_view import expenses_view_year_display, expenses_view_month_display
@@ -8,11 +8,12 @@ from .expenses_append import append_expense_form, append_expense, append_expense
 from .expenses_create import create_new_year_report_form, create_new_year_report
 from .expenses_edit import edit_expenses_form, edit_expenses
 from .extensions import bp, users_db, login_manager
-from .auth import auth_display_login_form, auth_authenticate_user, auth_logout
+from .auth import auth_authenticate_user, auth_logout
 from .categories_create import create_new_categories, create_new_categories_form
 from .categories_edit import edit_categories_form, edit_categories
 from .account import account_handle_change, account_handle_change_form
 from .token import verify_user_token
+from .dashboard import dashboard_get
 
 
 def handle_uncaught_exceptions(f):
@@ -55,10 +56,7 @@ def handle_needs_login():
 @handle_uncaught_exceptions
 def index() -> str | Response:
     if request.method == "GET":
-        if current_user.is_authenticated:
-            return render_template("dashboard.html", date=datetime.now())
-        else:
-            return auth_display_login_form()
+        return dashboard_get()
 
     if request.method == "POST":
         return auth_authenticate_user()

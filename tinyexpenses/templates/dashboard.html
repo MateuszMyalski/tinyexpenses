@@ -4,7 +4,7 @@
 {% block content %}
 <main>
     <div class="middle-container">
-        <h1 class="page-title">Welcome to Your Dashboard!</h1>
+        <h1 class="page-title">Welcome {{ full_name }} to your dashboard!</h1>
         <p>Here you can view your expenses, manage your budget, and more.</p>
         <ul class="dashboard-menu">
             <li><a href="{{ url_for('main.expenses_append') }}">💵 Append expense</a></li>
