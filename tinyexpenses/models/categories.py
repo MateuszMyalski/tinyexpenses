@@ -8,6 +8,7 @@ class CategoryType(Enum):
     WANTS = "Wants"
     NEEDS = "Needs"
     INCOME = "Income"
+    INITIAL_BALANCE_LABEL = "Initial Balance"
 
 
 class CategoryRecord:
@@ -26,7 +27,8 @@ class CategoryRecord:
             try:
                 self.category_type = CategoryType(category_type.title())
             except ValueError:
-                raise ValueError(f"Invalid category type: {category_type}.")
+                valid_cat_types = [cat.value for cat in CategoryType]
+                raise ValueError(f"Invalid category type: {category_type}. Valid only {valid_cat_types}")
         else:
             raise TypeError("category_type must be a str or CategoryType.")
 

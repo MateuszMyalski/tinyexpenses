@@ -21,5 +21,14 @@
     {{ form.submit() }}
 
   </form>
+  <details>
+    <summary>How does it works?</summary>
+    <p>Each category marked as an expense will decrease the account's yearly balance. Categories marked as income will
+      increase it.</p>
+    <p>You can override this behavior by entering a negative value in the amount field (using “-”). This is useful for
+      cases like reimbursements. For example, if you made a purchase and later received a cashback, you can first log
+      the expense, then log the compensation with a negative amount. The balance will reflect the net amount, while both
+      entries remain visible in the records.</p>
+
 </main>
 {% endblock %}

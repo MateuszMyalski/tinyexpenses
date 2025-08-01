@@ -8,10 +8,10 @@
   --info-bg-color: #d9edf7;
   --info-border-color: #bce8f1;
 
-  --income-color: #d1d1d1;
-  --wants-color: #ff8d8d;
-  --savings-color: #f6ff7f;
-  --needs-color: #8ca7ff;
+  --income-color: #6AE594;
+  --wants-color: #E66D6A;
+  --savings-color: #E6CD6A;
+  --needs-color: #6A6FE6;
 
 }
 
@@ -400,11 +400,11 @@ table.expenses-view tr.total-by-month-row {
   padding-bottom: 10%;
 }
 
-.config-segment > details[name="api-details"] {
+details {
   margin: 10px 0;
 }
 
-.config-segment > details[name="api-details"] > pre {
+details > pre {
   padding: 5px;
 
   word-break: break-all;

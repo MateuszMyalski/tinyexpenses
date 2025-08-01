@@ -1,14 +1,13 @@
 import os
-import werkzeug.security
-import tomllib
 import flask_login
+import secrets
+import dateutil
+import tomllib
+import tomli_w
 from datetime import datetime
 from .file import DbFile
 from .expenses import ExpenseRecord, YearExpensesReport
-import secrets
-
-import tomllib
-import tomli_w
+from .categories import CategoryType
 from werkzeug.security import check_password_hash, generate_password_hash
 
 
@@ -65,36 +64,32 @@ class Config:
         self._data["user"]["api_token"] = secrets.token_urlsafe(32)
         self._save()
 
-        return self._get_token()
+        return self.get_token()
 
-    def _get_token(self):
+    def get_token(self):
         return self._data["user"].get("api_token", None)
-    
-    def check_token(self, token):
-        return token == self._get_token()
+
 
 class ConfigCreator(Config):
     def __init__(self, db_file: DbFile):
         if not os.path.exists(db_file.dir):
             raise FileNotFoundError(f"Provided dir does not exist: {db_file.dir}")
 
-        if db_file.exists():
-            # Load existing config via base class
-            self._data = self._load()
-        else:
-            self._data = {
-                "user": {
-                    "username": "",
-                    "full_name": "",
-                    "active": True,
-                    "password_hash": "",
-                    "currency": "",
-                    "api_token": "",
-                }
+        self._data = {
+            "user": {
+                "username": "",
+                "full_name": "",
+                "active": True,
+                "password_hash": "",
+                "currency": "",
+                "api_token": "",
             }
+        }
 
-        with open(db_file.get_path(), "wb") as f:
-            tomli_w.dump(self._data, f)
+        # Do not overwrite config that already exists
+        if not db_file.exists():
+            with open(db_file.get_path(), "wb") as f:
+                tomli_w.dump(self._data, f)
 
         super().__init__(db_file)
 
@@ -152,8 +147,8 @@ class User(flask_login.UserMixin):
     def set_token(self):
         return self.config.set_token()
 
-    def check_token(self, token):
-        return self.config.check_token(token)
+    def get_token(self, token):
+        return self.config.get_token()
 
     def get_available_expenses_reports(self) -> list[int]:
         if not os.path.exists(self.user_directory):
@@ -192,10 +187,16 @@ class User(flask_login.UserMixin):
         )
 
     def create_categories_file(
-        self, year: str | int | None, template_year: str | int | None = None
+        self, year: str | int, template_year: str | int | None = None
     ) -> None:
+        try:
+            escaped_year = int(year)
+            dateutil.parser.parse(f"{escaped_year}-01-01")
+        except Exception as e:
+            raise NameError(f"Year number looks odd : {e}")
+
         categories_file_path = os.path.join(
-            self.user_directory, str(year), self.CATEGORIES_FILE_NAME
+            self.user_directory, str(escaped_year), self.CATEGORIES_FILE_NAME
         )
 
         categories_file = DbFile(categories_file_path)
@@ -207,23 +208,25 @@ class User(flask_login.UserMixin):
             categories_file.copy_from(template_file.get_path())
 
     def create_expenses_records(self, year: str | int, initial_balance: float) -> None:
-        file_path = os.path.join(
-            self.user_directory, str(year), self.EXPENSES_FILE_NAME
-        )
+        try:
+            escaped_year = int(year)
 
-        # There might be a folder but empty
-        # os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            initial_balance_entry = ExpenseRecord(
+                timestamp=datetime.now(),
+                category=CategoryType.INITIAL_BALANCE_LABEL.value,
+                expense_date=f"{escaped_year}-01-01",
+                amount=initial_balance,
+                description=CategoryType.INITIAL_BALANCE_LABEL.value,
+            )
+        except Exception as e:
+            raise NameError(f"Year number looks odd : {e}")
+
+        file_path = os.path.join(
+            self.user_directory, str(escaped_year), self.EXPENSES_FILE_NAME
+        )
 
         expenses_file = DbFile(file_path)
         expenses_file.create()
-
-        initial_balance_entry = ExpenseRecord(
-            timestamp=datetime.now(),
-            category=YearExpensesReport.INITIAL_BALANCE_LABEL,
-            expense_date=f"{year}-01-01",
-            amount=initial_balance,
-            description=YearExpensesReport.INITIAL_BALANCE_LABEL,
-        )
 
         YearExpensesReport.insert_expense(expenses_file, initial_balance_entry)
 

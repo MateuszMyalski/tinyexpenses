@@ -37,6 +37,7 @@ dependencies = [
   "Werkzeug",
   "wrapt",
   "WTForms",
+  "itsdangerous"
 ]
 
 [project.scripts]
@@ -47,4 +48,4 @@ packages = ["tinyexpenses"]
 include-package-data = true
 
 [tool.setuptools.package-data]
-tinyexpenses = ["templates/**/*.html", "static/**/*"]
+tinyexpenses = ["templates/**/*.html", "static/**/*", "models/**/*"]

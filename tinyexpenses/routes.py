@@ -12,6 +12,7 @@ from .auth import auth_display_login_form, auth_authenticate_user, auth_logout
 from .categories_create import create_new_categories, create_new_categories_form
 from .categories_edit import edit_categories_form, edit_categories
 from .account import account_handle_change, account_handle_change_form
+from .token import verify_user_token
 
 
 def handle_uncaught_exceptions(f):
@@ -37,7 +38,7 @@ def api_key_required(view_function):
         if x_api_key is None:
             return jsonify({"status": "Unauthorized"}), 401
 
-        if not user.check_token(x_api_key):
+        if verify_user_token(x_api_key) is None:
             return jsonify({"status": "Unauthorized"}), 401
 
         return view_function(*args, **kwargs)

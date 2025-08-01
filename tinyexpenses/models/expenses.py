@@ -5,6 +5,7 @@ import calendar
 from enum import Enum
 from dataclasses import dataclass, field
 from datetime import date, datetime
+from .categories import CategoryType
 
 from .file import DbFile
 
@@ -125,8 +126,6 @@ class ExpenseRecord:
 
 
 class YearExpensesReport:
-    INITIAL_BALANCE_LABEL = "Initial Balance"
-
     def __init__(self, db_file: DbFile):
         self.db_file: DbFile = db_file
         self.expenses_records: list[ExpenseRecord] = list()
@@ -165,7 +164,7 @@ class YearExpensesReport:
                 except Exception as reason:
                     raise Exception(f"Cannot parse: {file.name}:{row + 1} - {reason}.")
 
-                if expense.category == self.INITIAL_BALANCE_LABEL:
+                if expense.category == CategoryType.INITIAL_BALANCE_LABEL.value:
                     self.initial_balance = expense.amount
 
                 self.expenses_records.append(expense)

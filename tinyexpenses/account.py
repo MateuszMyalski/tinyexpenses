@@ -5,6 +5,7 @@ from wtforms import StringField, PasswordField, SubmitField
 from wtforms import validators
 from .models.accounts import User
 from .extensions import users_db
+from .token import generate_user_token
 
 ACCOUNT_APPEND_FLASH_INFO_LABEL = "account_info_info"
 ACCOUNT_APPEND_FLASH_ERROR_LABEL = "account_error_info"
@@ -55,8 +56,6 @@ class ChangePasswordForm(FlaskForm):
 
 
 def _collect_flash_messages():
-    flashed_info = []
-
     infos = [
         ("info", msg)
         for msg in get_flashed_messages(False, ACCOUNT_APPEND_FLASH_INFO_LABEL)
@@ -85,8 +84,10 @@ def _handle_token_generation(user: User, form: XApiKeyGenerateForm) -> None:
         flash("Request could not be validated.", ACCOUNT_APPEND_FLASH_ERROR_LABEL)
 
     token = user.set_token()
-    form.token.default = token
-    form.token.data = token
+    user_token = generate_user_token(token)
+    
+    form.token.default = user_token
+    form.token.data = user_token
 
     flash("Token generated.", ACCOUNT_APPEND_FLASH_INFO_LABEL)
 

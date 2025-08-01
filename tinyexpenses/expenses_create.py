@@ -12,7 +12,8 @@ from .extensions import users_db
 class SetInitialBalanceForm(FlaskForm):
     initial_balance_amount = FloatField(
         "Initial balance",
-        [validators.DataRequired(message="Initial balance is required.")],
+        [validators.InputRequired(message="Initial balance is required.")],
+        default=0.0
     )
     submit = SubmitField("Submit")
 

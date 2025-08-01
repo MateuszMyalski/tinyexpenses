@@ -11,10 +11,19 @@
                 {% for label in col_labels %}
                 <th>{{ label }}</th>
                 {% endfor %}
-                <th></th>
             </tr>
         </thead>
         <tbody>
+            {% if content | length == 0 %}
+            <tr class="empty">
+                <td class="row-number-cell"></td>
+                <td class="button remove"><input type="button" value="[-]" onclick="deleteRow(this)" /></td>
+                {% for label in col_labels %}
+                <td contenteditable="true" class="data"></td>
+                {% endfor %}
+                <td class="button add"><input type="button" value="[+]" onclick="insertRow(this)" /></td>
+            </tr>
+            {% endif %}
             {% for row in content %}
             <tr class="source">
                 <td class="row-number-cell"></td>

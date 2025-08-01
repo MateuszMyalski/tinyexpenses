@@ -9,6 +9,7 @@ const TABLE_ID = "csv-view";
 const DATA_CELL_CLASS = "data";  // class for serializable <td>
 const ROW_INDEX = 1;
 const SOURCE_ROW_CLASS = "source";
+const EMPTY_ROW_CLASS = "empty"
 
 const diff = {
     addedRows: 0,
@@ -18,9 +19,15 @@ const diff = {
 };
 
 function deleteRow(button) {
+    const row = button.closest("tr");
+
+    if (row.classList.contains(EMPTY_ROW_CLASS)) {
+        // Do not allow to remove empty template
+        return;
+    }
+
     diff.modifiedCells += getCountOfModifiedCells();
 
-    const row = button.closest("tr");
     row.remove();
 
     diff.prevTableData = getTableData();
@@ -72,10 +79,6 @@ function getCountOfModifiedCells() {
     }
 
     return modified;
-}
-
-function getCurrentTimestamp() {
-    return new Date().toISOString().slice(0, 19).replace("T", " ");
 }
 
 window.addEventListener("DOMContentLoaded", () => {
