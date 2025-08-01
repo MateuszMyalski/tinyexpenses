@@ -187,6 +187,7 @@ form.create-form > select {
 }
 
 form.expenses-append-form > input[type="date"] {
+  appearance: none;
   -webkit-appearance: none;
 }
 
