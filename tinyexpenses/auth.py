@@ -23,7 +23,7 @@ def auth_display_login_form():
     return render_template("login.html", form=form)
 
 
-def auth_authenticate_user():
+def auth_authenticate_post():
     form = LoginForm()
     user: User | None = users_db.get(form.username.data)
 

@@ -12,7 +12,7 @@ def _store_categories_data_cb(ctx: dict, data: str):
     YearCategories.store(ctx["db_file"], categories)
 
 
-def edit_categories(year: int):
+def categories_edit_post(year: int):
     requested_user = users_db.get(current_user.id)
 
     if requested_user is None:
@@ -30,7 +30,7 @@ def edit_categories(year: int):
     )
 
 
-def edit_categories_form(year: int):
+def categories_edit_get(year: int):
     requested_user: User | None = users_db.get(current_user.id)
 
     if requested_user is None:

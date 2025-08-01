@@ -49,7 +49,7 @@ def _calculate_yearly_expenses_stats(
     return year_totals, monthly_balance, monthly_balance_per_category_type
 
 
-def expenses_view_year_display(year: int):
+def expenses_view_year_get(year: int):
     requested_user = users_db.get(current_user.id)
 
     if requested_user is None:
@@ -104,7 +104,7 @@ def expenses_view_year_display(year: int):
     )
 
 
-def expenses_view_month_display(year: int, month: int):
+def expenses_view_month_get(year: int, month: int):
     requested_user = users_db.get(current_user.id)
 
     if requested_user is None:

@@ -19,7 +19,7 @@ class CreateCategoryFileForm(FlaskForm):
         self.template_year.choices = list((str(year), str(year)) for year in years)
 
 
-def create_new_categories_form(year: int):
+def categories_create_get(year: int):
     requested_user = users_db.get(current_user.id)
 
     if requested_user is None:
@@ -44,7 +44,7 @@ def create_new_categories_form(year: int):
     return render_template("categories_create.html", form=form, year=year)
 
 
-def create_new_categories(year: int):
+def categories_create_post(year: int):
     requested_user = users_db.get(current_user.id)
 
     if requested_user is None:

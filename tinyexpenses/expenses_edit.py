@@ -12,7 +12,7 @@ def _store_expenses_data_cb(ctx: dict, data: str):
     YearExpensesReport.store(ctx["db_file"], expenses)
 
 
-def edit_expenses(year: int):
+def expenses_edit_post(year: int):
     requested_user = users_db.get(current_user.id)
 
     if requested_user is None:
@@ -30,7 +30,7 @@ def edit_expenses(year: int):
     )
 
 
-def edit_expenses_form(year: int):
+def expenses_edit_get(year: int):
     requested_user: User | None = users_db.get(current_user.id)
 
     if requested_user is None:

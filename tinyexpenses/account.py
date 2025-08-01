@@ -106,7 +106,7 @@ def _handle_password_change(user: User, form: ChangePasswordForm) -> None:
         flash("Invalid password.", ACCOUNT_APPEND_FLASH_ERROR_LABEL)
 
 
-def account_handle_change():
+def account_post():
     requested_user: User | None = users_db.get(current_user.id)
 
     if requested_user is None:
@@ -139,7 +139,7 @@ def account_handle_change():
     )
 
 
-def account_handle_change_form():
+def account_get():
     requested_user: User | None = users_db.get(current_user.id)
 
     if requested_user is None:

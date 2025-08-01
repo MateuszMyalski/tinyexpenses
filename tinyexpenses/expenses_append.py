@@ -58,7 +58,7 @@ class AppendExpenseForm(FlaskForm):
         )
 
 
-def append_expense_form():
+def expenses_append_get():
     requested_user = users_db.get(current_user.id)
 
     if requested_user is None:
@@ -82,7 +82,7 @@ def append_expense_form():
     )
 
 
-def append_expense():
+def expenses_append_post():
     requested_user: User | None = users_db.get(current_user.id)
 
     if requested_user is None:
@@ -123,7 +123,7 @@ def append_expense():
     return redirect(url_for("main.expenses_append"))
 
 
-def append_expense_api(username):
+def expenses_append_api_put(username):
     if request.headers.get("Content-type", "") != "application/json":
         return jsonify({"status": "Content-type nor supported."}), 400
 

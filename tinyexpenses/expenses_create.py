@@ -18,7 +18,7 @@ class SetInitialBalanceForm(FlaskForm):
     submit = SubmitField("Submit")
 
 
-def create_new_year_report(year: int):
+def expenses_create_post(year: int):
     form = SetInitialBalanceForm()
 
     if not form.validate_on_submit():
@@ -38,7 +38,7 @@ def create_new_year_report(year: int):
     return redirect(url_for("main.expenses_view_year", year=year))
 
 
-def create_new_year_report_form(year: int):
+def expenses_create_get(year: int):
     requested_user = users_db.get(current_user.id)
 
     if requested_user is None:

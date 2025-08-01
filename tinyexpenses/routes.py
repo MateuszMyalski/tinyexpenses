@@ -3,15 +3,15 @@ from flask import request, render_template, redirect, url_for, jsonify
 from flask_login import login_required
 from functools import wraps
 from werkzeug import Response
-from .expenses_view import expenses_view_year_display, expenses_view_month_display
-from .expenses_append import append_expense_form, append_expense, append_expense_api
-from .expenses_create import create_new_year_report_form, create_new_year_report
-from .expenses_edit import edit_expenses_form, edit_expenses
+from .expenses_view import expenses_view_year_get, expenses_view_month_get
+from .expenses_append import expenses_append_get, expenses_append_post, expenses_append_api_put
+from .expenses_create import expenses_create_get, expenses_create_post
+from .expenses_edit import expenses_edit_get, expenses_edit_post
 from .extensions import bp, users_db, login_manager
-from .auth import auth_authenticate_user, auth_logout
-from .categories_create import create_new_categories, create_new_categories_form
-from .categories_edit import edit_categories_form, edit_categories
-from .account import account_handle_change, account_handle_change_form
+from .auth import auth_authenticate_post, auth_logout
+from .categories_create import categories_create_post, categories_create_get
+from .categories_edit import categories_edit_get, categories_edit_post
+from .account import account_post, account_get
 from .token import verify_user_token
 from .dashboard import dashboard_get
 
@@ -59,7 +59,7 @@ def index() -> str | Response:
         return dashboard_get()
 
     if request.method == "POST":
-        return auth_authenticate_user()
+        return auth_authenticate_post()
 
     return redirect(url_for("main.index"))
 
@@ -76,10 +76,10 @@ def logout():
 @login_required
 def expenses_create(year: int):
     if request.method == "POST":
-        return create_new_year_report(year)
+        return expenses_create_post(year)
 
     if request.method == "GET":
-        return create_new_year_report_form(year)
+        return expenses_create_get(year)
 
     return render_template("404.html")
 
@@ -89,10 +89,10 @@ def expenses_create(year: int):
 @login_required
 def expenses_append():
     if request.method == "POST":
-        return append_expense()
+        return expenses_append_post()
 
     if request.method == "GET":
-        return append_expense_form()
+        return expenses_append_get()
 
     return render_template("404.html")
 
@@ -100,7 +100,7 @@ def expenses_append():
 @bp.route("/v1.0/<username>/expenses/append", methods=("PUT", "POST"))
 @api_key_required
 def expenses_append_api(username):
-    return append_expense_api(username)
+    return expenses_append_api_put(username)
 
 
 @bp.route("/expenses/edit/<year>", methods=("GET", "POST"))
@@ -108,10 +108,10 @@ def expenses_append_api(username):
 @login_required
 def expenses_edit(year: int):
     if request.method == "POST":
-        return edit_expenses(year)
+        return expenses_edit_post(year)
 
     if request.method == "GET":
-        return edit_expenses_form(year)
+        return expenses_edit_get(year)
 
     return render_template("404.html")
 
@@ -120,7 +120,7 @@ def expenses_edit(year: int):
 @handle_uncaught_exceptions
 @login_required
 def expenses_view_month(year: int, month: int):
-    return expenses_view_month_display(year, month)
+    return expenses_view_month_get(year, month)
 
 
 @bp.route("/expenses/view/", defaults={"year": None}, methods=["GET", "POST"])
@@ -131,7 +131,7 @@ def expenses_view_year(year: int | None):
     if year is None:
         year = datetime.now().year
 
-    return expenses_view_year_display(year)
+    return expenses_view_year_get(year)
 
 
 @bp.route("/categories/edit/<year>", methods=("GET", "POST"))
@@ -139,10 +139,10 @@ def expenses_view_year(year: int | None):
 @login_required
 def categories_edit(year: int):
     if request.method == "POST":
-        return edit_categories(year)
+        return categories_edit_post(year)
 
     if request.method == "GET":
-        return edit_categories_form(year)
+        return categories_edit_get(year)
 
     return render_template("404.html")
 
@@ -152,10 +152,10 @@ def categories_edit(year: int):
 @login_required
 def categories_create(year):
     if request.method == "POST":
-        return create_new_categories(year)
+        return categories_create_post(year)
 
     if request.method == "GET":
-        return create_new_categories_form(year)
+        return categories_create_get(year)
 
     return render_template("404.html")
 
@@ -165,9 +165,9 @@ def categories_create(year):
 @login_required
 def account():
     if request.method == "POST":
-        return account_handle_change()
+        return account_post()
 
     if request.method == "GET":
-        return account_handle_change_form()
+        return account_get()
 
     return render_template("404.html")
