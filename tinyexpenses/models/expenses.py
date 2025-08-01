@@ -82,7 +82,7 @@ class ExpenseRecord:
         timestamp: str | datetime,
         category: str,
         expense_date: str | date,
-        amount: str | float,
+        amount: str | float | int,
         description: str,
     ):
         if isinstance(timestamp, datetime):
@@ -101,8 +101,8 @@ class ExpenseRecord:
 
         self.description = description
 
-        if isinstance(amount, float):
-            self.amount = amount
+        if isinstance(amount, (float, int)):
+            self.amount = float(amount)
         elif isinstance(amount, str):
             self.amount = float(amount.replace(",", "."))
         else:

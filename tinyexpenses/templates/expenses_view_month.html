@@ -44,9 +44,12 @@
                 <td class="category-cell">{{ category }}</td>
                 <td class="category-type-cell">{{ category_type.value[0] }}</td>
                 <td class="amount-cell">
-                    {% if totals[month] and category_type != CategoryType.INCOME %}-{% endif %}{{ totals[month] |
-                    round(2)
-                    }} {{ currency }}
+                    {% if category_type != CategoryType.INCOME %}
+                    {{ -totals[month] | round(2) }}
+                    {% else %}
+                    {{ totals[month] | round(2) }}
+                    {% endif %}
+                    {{ currency }}
                 </td>
             </tr>
             {% endfor %}

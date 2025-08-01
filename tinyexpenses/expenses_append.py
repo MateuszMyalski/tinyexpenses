@@ -124,7 +124,7 @@ def append_expense():
 
 
 def append_expense_api(username):
-    if request.headers["Content-type"] != "application/json":
+    if request.headers.get("Content-type", "") != "application/json":
         return jsonify({"status": "Content-type nor supported."}), 400
 
     requested_user = users_db.get(username)
@@ -142,8 +142,14 @@ def append_expense_api(username):
             expense_date=user_request_data.get("expense_date", datetime.now().date()),
             description=user_request_data.get("description", ""),
         )
-    except Exception:
-        return jsonify({"status": "Could not parse request."}), 400
+    except Exception as e:
+        return jsonify(
+            {
+                "status": "Could not parse request.",
+                "received_content": f"{request.data.decode()}",
+                "exception:" : f"{e}"
+            }
+        ), 400
 
     # We support adding expences only to current year
     if expense.expense_date.year != datetime.now().date().year:

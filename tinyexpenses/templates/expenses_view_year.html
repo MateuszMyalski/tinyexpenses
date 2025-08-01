@@ -39,14 +39,22 @@
                 <td class="category-type-cell">{{ category_type.value[0] }}</td>
                 {% for value in totals %}
                 <td class="amount-cell">
-                    {% if value and category_type != CategoryType.INCOME %}-{% endif %}{{ value | round(2) }} {{
-                    currency }}
+                    {% if category_type != CategoryType.INCOME %}
+                    {{ -value | round(2) }}
+                    {% else %}
+                    {{ value | round(2) }}
+                    {% endif %}
+                    {{ currency }}
                 </td>
                 {% endfor %}
                 <td class="total-amount-cell">
                     {% set total = totals | sum %}
-                    {% if total and category_type != CategoryType.INCOME %}-{% endif %}{{ total | round(2) }} {{
-                    currency }}
+                    {% if category_type != CategoryType.INCOME %}
+                    {{ -total | round(2) }}
+                    {% else %}
+                    {{ total | round(2) }}
+                    {% endif %}
+                    {{ currency }}
                 </td>
             </tr>
             {% endfor %}
