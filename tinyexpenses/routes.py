@@ -7,7 +7,7 @@ from .expenses_view import expenses_view_year_get, expenses_view_month_get
 from .expenses_append import expenses_append_get, expenses_append_post, expenses_append_api_put
 from .expenses_create import expenses_create_get, expenses_create_post
 from .expenses_edit import expenses_edit_get, expenses_edit_post
-from .extensions import bp, users_db, login_manager
+from .extensions import bp, users_db, login_manager, csrf
 from .auth import auth_authenticate_post, auth_logout
 from .categories_create import categories_create_post, categories_create_get
 from .categories_edit import categories_edit_get, categories_edit_post
@@ -99,6 +99,7 @@ def expenses_append():
 
 @bp.route("/api/v1/<username>/expenses/append", methods=("PUT", "POST"))
 @api_key_required
+@csrf.exempt
 def expenses_append_api(username):
     return expenses_append_api_put(username)
 
