@@ -97,7 +97,7 @@ def expenses_append():
     return render_template("404.html")
 
 
-@bp.route("/v1.0/<username>/expenses/append", methods=("PUT", "POST"))
+@bp.route("/api/v1/<username>/expenses/append", methods=("PUT", "POST"))
 @api_key_required
 def expenses_append_api(username):
     return expenses_append_api_put(username)
