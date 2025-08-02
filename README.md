@@ -12,7 +12,7 @@ pip install -r .
 Create a Python file `wsgi.py` with the following content (or modify according to your needs):
 ```bash
 from tinyexpenses import create_app
-app = create_app("tinyexpenses.config.ProductionConfig")
+app = create_app("tinyexpenses.config.ProductionHTTPSConfig")
 ```
 Use Waitress and nginx for real production environment.
 
