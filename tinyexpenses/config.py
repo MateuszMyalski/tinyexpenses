@@ -10,9 +10,11 @@ class Config:
 
 class ProductionConfig(Config):
     DEBUG = False
+    TESTING = False
     SESSION_COOKIE_SECURE = True
     REMEMBER_COOKIE_SECURE = True
 
 
 class DevelopmentConfig(Config):
     DEBUG = True
+    TESTING = True

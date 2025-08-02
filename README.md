@@ -23,7 +23,7 @@ export SECRET_KEY="your-very-secret-key"
 ```
 You can generate secret key with:
 ```bash
-openssl rand -hex 32
+python -c 'import secrets; print(secrets.token_hex())'
 ```
 __Changing the secret key invalidates all user API tokens.__
 

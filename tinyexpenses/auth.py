@@ -38,7 +38,10 @@ def auth_authenticate_post():
             "login.html", form=form, infos=[("error", "Invalid username/password")]
         )
 
-    login_user(user)
+    if not login_user(user):
+        return render_template(
+            "login.html", form=form, infos=[("error", "User inactive")]
+        )
 
     next = request.args.get("next")
     # url_has_allowed_host_and_scheme should check if the url is safe

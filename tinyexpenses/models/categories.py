@@ -52,7 +52,6 @@ class YearCategories:
 
     def _load_categories(self) -> None:
         if not self.db_file.exists():
-            print(f"here {self.db_file.get_path()}")
             raise FileNotFoundError(f"File {self.db_file.get_path()} does not exist.")
 
         with open(self.db_file.get_path(), mode="r", newline="") as file:
