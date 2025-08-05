@@ -222,7 +222,8 @@ form.login-form > input[type="submit"],
 form.config-form > input[type="submit"],
 form.expenses-append-form > input[type="submit"],
 form.create-form > input[type="submit"],
-form.csv-edit-form > input[type="submit"] {
+form.csv-edit-form > input[type="submit"],
+form.savings-form > input[type="submit"] {
   background-color: var(--bg-color);
   
   width: 100%;
@@ -369,10 +370,6 @@ table.savings-view td {
   border: 1px solid var(--text-color);
 
   padding: 0.2em 0;
-}
-
-table.savings-view tr:nth-child(even) {
-  background-color: var(--accent2);
 }
 
 table.expenses-view,
