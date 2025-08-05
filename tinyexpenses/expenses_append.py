@@ -21,13 +21,12 @@ from wtforms import (
 )
 
 from tinyexpenses.models.accounts import User
-from .models.categories import YearCategories, CategoryRecord
+from .models.categories import YearCategories, CategoryRecord, CategoryType
 from .models.expenses import YearExpensesReport, ExpenseRecord
+from .models.savings import Savings
 from .extensions import users_db
+from .models.flash import FlashType, flash_collect
 from datetime import datetime, date
-
-
-EXPENSE_APPEND_FLASH_LABEL = "append_expense_info"
 
 
 class AppendExpenseForm(FlaskForm):
@@ -68,18 +67,29 @@ def expenses_append_get():
     year_categories_file = requested_user.get_categories_file(datetime.now().year)
     year_categories = YearCategories(year_categories_file)
 
-    flashed_info = [
-        ("info", msg) for msg in get_flashed_messages(False, EXPENSE_APPEND_FLASH_LABEL)
-    ]
     form = AppendExpenseForm()
     form.populate_category_choices(year_categories.get_categories())
 
     return render_template(
         "expenses_append.html",
         form=form,
-        infos=flashed_info,
+        infos=flash_collect(),
         current_year=datetime.now().year,
     )
+
+
+def _update_savings(requested_user: User, category: str, amount: float):
+    savings_file = requested_user.get_savings_file()
+    savings = Savings(savings_file)
+
+    saving_record = savings.get_by_category().get(category, None)
+    if saving_record is not None:
+        amount += saving_record.balance
+
+    savings.update(category, None, amount)
+    savings.store()
+
+    flash("Updated savings.", FlashType.INFO.name)
 
 
 def expenses_append_post():
@@ -114,12 +124,15 @@ def expenses_append_post():
         )
 
         YearExpensesReport.insert_expense(year_expenses_file, expense)
+
+        if expense.category in year_categories[CategoryType.SAVINGS]:
+            _update_savings(requested_user, expense.category, expense.amount)
     except FileNotFoundError:
         return redirect(
             url_for("main.expenses_create", year=form.expense_date.data.year)
         )
 
-    flash("Request completed.", EXPENSE_APPEND_FLASH_LABEL)
+    flash("Request completed.", FlashType.INFO.name)
     return redirect(url_for("main.expenses_append"))
 
 
@@ -147,7 +160,7 @@ def expenses_append_api_put(username):
             {
                 "status": "Could not parse request.",
                 "received_content": f"{request.data.decode()}",
-                "exception:" : f"{e}"
+                "exception:": f"{e}",
             }
         ), 400
 
@@ -192,6 +205,9 @@ def expenses_append_api_put(username):
 
     try:
         YearExpensesReport.insert_expense(year_expenses_file, expense)
+
+        if expense.category in year_categories[CategoryType.SAVINGS]:
+            _update_savings(requested_user, expense.category, expense.amount)
     except Exception:
         return jsonify(
             {

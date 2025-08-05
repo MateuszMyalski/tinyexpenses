@@ -18,3 +18,7 @@ class ProductionHTTPSConfig(ProductionHTTPConfig):
 class DevelopmentConfig(Config):
     DEBUG = True
     TESTING = True
+    WTF_CSRF_SSL_STRICT = False
+    SESSION_COOKIE_SECURE = False
+    SESSION_COOKIE_SAMESITE = None
+    SESSION_COOKIE_DOMAIN = False

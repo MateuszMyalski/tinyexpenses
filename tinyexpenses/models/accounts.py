@@ -72,8 +72,8 @@ class Config:
 
 class ConfigCreator(Config):
     def __init__(self, db_file: DbFile):
-        if not os.path.exists(db_file.dir):
-            raise FileNotFoundError(f"Provided dir does not exist: {db_file.dir}")
+        if not os.path.exists(db_file._dir):
+            raise FileNotFoundError(f"Provided dir does not exist: {db_file._dir}")
 
         self._data = {
             "user": {
@@ -111,6 +111,7 @@ class ConfigCreator(Config):
 class User(flask_login.UserMixin):
     EXPENSES_FILE_NAME = "expenses.csv"
     CATEGORIES_FILE_NAME = "categories.csv"
+    SAVINGS_FILE_NAME = "savings.csv"
 
     def __init__(self, id, config: Config):
         self.id = id
@@ -184,6 +185,11 @@ class User(flask_login.UserMixin):
     def get_categories_file(self, year: str | int) -> DbFile:
         return DbFile(
             os.path.join(self.user_directory, str(year), self.CATEGORIES_FILE_NAME)
+        )
+    
+    def get_savings_file(self) -> DbFile:
+        return DbFile(
+            os.path.join(self.user_directory, self.SAVINGS_FILE_NAME)
         )
 
     def create_categories_file(

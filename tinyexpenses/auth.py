@@ -27,8 +27,8 @@ def auth_authenticate_post():
     form = LoginForm()
     user: User | None = users_db.get(form.username.data)
 
-    if not form.validate():
-        return render_template("login.html", form=form, message="Not validated")
+    if not form.validate_on_submit():
+        return render_template("login.html", form=form, infos=[("error","Not validated")])
 
     if user is None:
         return render_template("login.html", form=form)

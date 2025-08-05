@@ -45,6 +45,9 @@ def expenses_edit_get(year: int):
         year_expenses_file
     ).get_expenses()
 
+    year_expenses.sort(key=lambda timestamp: timestamp.timestamp)
+
     return render_csv_data_edit_form(
-        [col.label for col in ExpenseRecord.Columns], year_expenses
+        col_labels=[col.label for col in ExpenseRecord.Columns],
+        csv_content=year_expenses,
     )

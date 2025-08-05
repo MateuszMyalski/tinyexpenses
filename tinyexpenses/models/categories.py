@@ -1,6 +1,7 @@
 import csv
 from enum import Enum
-from .file import DbFile
+from .file import DbFile, DbCSVReader, DbCSVWriter
+from collections import defaultdict
 
 
 class CategoryType(Enum):
@@ -20,19 +21,25 @@ class CategoryRecord:
             self.index = index
             self.label = label
 
+        @classmethod
+        def labels(cls):
+            return [column.label for column in cls]
+
     def __init__(self, category: str, category_type: str | CategoryType):
         if isinstance(category_type, CategoryType):
             self.category_type = category_type
         elif isinstance(category_type, str):
             try:
-                self.category_type = CategoryType(category_type.title())
+                self.category_type = CategoryType(category_type.strip().title())
             except ValueError:
                 valid_cat_types = [cat.value for cat in CategoryType]
-                raise ValueError(f"Invalid category type: {category_type}. Valid only {valid_cat_types}")
+                raise ValueError(
+                    f"Invalid category type: {category_type}. Valid only {valid_cat_types}"
+                )
         else:
             raise TypeError("category_type must be a str or CategoryType.")
 
-        self.category = category
+        self.category = category.strip()
 
     def __str__(self):
         return f"{self.category} {self.category_type.value}"
@@ -40,42 +47,44 @@ class CategoryRecord:
     def __iter__(self):
         return iter((self.category, self.category_type.value))
 
+    def serialize(self) -> list[str]:
+        row = [str()] * len(self.Columns)
+        row[self.Columns.CATEGORY_TYPE.index] = self.category_type.value
+        row[self.Columns.CATEGORY.index] = self.category
+
+        return row
+
 
 class YearCategories:
-    BACKUP_FILE_SUFFIX = ".bak"
-
     def __init__(self, db_file: DbFile):
-        self.db_file = db_file
-        self.categories_records: list[CategoryRecord] = list()
+        self._db_file = db_file
+        self._by_category: dict[str, CategoryRecord] = {}
+        self._by_category_type: dict[CategoryType, dict[str, CategoryRecord]] = (
+            defaultdict(dict)
+        )
 
         self._load_categories()
 
     def _load_categories(self) -> None:
-        if not self.db_file.exists():
-            raise FileNotFoundError(f"File {self.db_file.get_path()} does not exist.")
+        if not self._db_file.exists():
+            raise FileNotFoundError(f"File {self._db_file.get_path()} does not exist.")
 
-        with open(self.db_file.get_path(), mode="r", newline="") as file:
-            reader = csv.reader(file)
-
-            for row, record in enumerate(reader):
-                # Empty line
-                if len(record) == 0:
-                    continue
-
-                if len(record) != len(CategoryRecord.Columns):
+        with DbCSVReader(self._db_file, CategoryRecord.Columns.labels()) as reader:
+            for row, line in reader.read():
+                try:
+                    category_record = CategoryRecord(*line)
+                except Exception as reason:
                     raise Exception(
-                        f"Cannot parse: {file.name}:{row + 1} -  Read {len(record)} columns. Expected {len(CategoryRecord.Columns)} elements."
+                        f"Cannot parse: {self._db_file.get_file_name()}:{row + 1} - {reason}."
                     )
 
-                category: str = record[CategoryRecord.Columns.CATEGORY.index].strip()
-                cat_type = (
-                    record[CategoryRecord.Columns.CATEGORY_TYPE.index].strip().title()
-                )
-
-                self.categories_records.append(CategoryRecord(category, cat_type))
+                self._by_category[category_record.category] = category_record
+                self._by_category_type[category_record.category_type][
+                    category_record.category
+                ] = category_record
 
     def get_categories(self) -> list[CategoryRecord]:
-        return self.categories_records
+        return list(self._by_category.values())
 
     def __getitem__(self, key: CategoryType | str):
         if isinstance(key, CategoryType):
@@ -88,35 +97,18 @@ class YearCategories:
         return list(
             map(
                 lambda r: r.category,
-                filter(lambda r: r.category_type == key, self.categories_records),
+                self._by_category_type[key].values(),
             )
         )
 
-    def __setitem__(self, key: CategoryType | str, value: str) -> None:
-        if isinstance(key, CategoryType):
-            category_type = key
-        elif isinstance(key, str):
-            category_type = CategoryType(key.title())
-        else:
-            raise TypeError("key must be a str or CategoryType")
+    def insert_category(self, record: CategoryRecord):
+        if record.category in self._by_category:
+            return
 
-        self.categories_records.append(CategoryRecord(value, category_type))
+        self._by_category[record.category] = record
+        self._by_category_type[record.category_type][record.category] = record
 
-    @staticmethod
-    def insert_category(
-        db_file: DbFile, categories: CategoryRecord | list[CategoryRecord]
-    ):
-        if not isinstance(categories, list):
-            categories = [categories]
-
-        with open(db_file.get_path(), mode="a", newline="") as file:
-            writer = csv.writer(file)
-            for category in categories:
-                row = [str()] * len(CategoryRecord.Columns)
-                row[CategoryRecord.Columns.CATEGORY_TYPE.index] = category.category_type.value
-                row[CategoryRecord.Columns.CATEGORY.index] = category.category
-
-                writer.writerow(row)
+        YearCategories.store(self._db_file, list(self._by_category.values()))
 
     @staticmethod
     def store(db_file: DbFile, categories: list[CategoryRecord]) -> None:
@@ -124,7 +116,11 @@ class YearCategories:
         db_file.erase()
 
         try:
-            YearCategories.insert_category(db_file, categories)
+            with open(db_file.get_path(), mode="w", newline="") as file:
+                writer = csv.writer(file)
+                for category in categories:
+                    writer.writerow(category.serialize())
+
         except Exception as e:
             db_file.restore()
             raise e

@@ -1,6 +1,7 @@
-
 {% if infos | length > 0 %}
-{% for type, info in infos %}
-<div class="info-message {{ type }}">{{ info }}</div>
-{% endfor %}
+<div class="infos">
+    {% for type, info in infos %}
+    <div class="info-message {{ type }}">{{ info }}</div>
+    {% endfor %}
+</div>
 {% endif %}

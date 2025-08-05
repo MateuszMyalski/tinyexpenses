@@ -40,9 +40,9 @@
                 {% for value in totals %}
                 <td class="amount-cell">
                     {% if category_type != CategoryType.INCOME %}
-                    {{ -value | round(2) }}
+                    {{ -value | round(2) | format_number }}
                     {% else %}
-                    {{ value | round(2) }}
+                    {{ value | round(2) | format_number }}
                     {% endif %}
                     {{ currency }}
                 </td>
@@ -50,9 +50,9 @@
                 <td class="total-amount-cell">
                     {% set total = totals | sum %}
                     {% if category_type != CategoryType.INCOME %}
-                    {{ -total | round(2) }}
+                    {{ -total | round(2) | format_number }}
                     {% else %}
-                    {{ total | round(2) }}
+                    {{ total | round(2) | format_number }}
                     {% endif %}
                     {{ currency }}
                 </td>

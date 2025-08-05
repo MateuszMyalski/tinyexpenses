@@ -4,12 +4,9 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms import validators
 from .models.accounts import User
+from .models.flash import FlashType, flash_collect
 from .extensions import users_db
 from .token import generate_user_token
-
-ACCOUNT_APPEND_FLASH_INFO_LABEL = "account_info_info"
-ACCOUNT_APPEND_FLASH_ERROR_LABEL = "account_error_info"
-
 
 class UserDetailsForm(FlaskForm):
     full_name = StringField("Full name", validators=[validators.DataRequired()])
@@ -55,15 +52,15 @@ class ChangePasswordForm(FlaskForm):
     submit = SubmitField("Change password")
 
 
-def _collect_flash_messages():
+def flash_collect():
     infos = [
         ("info", msg)
-        for msg in get_flashed_messages(False, ACCOUNT_APPEND_FLASH_INFO_LABEL)
+        for msg in get_flashed_messages(False, FlashType.INFO.name)
     ]
 
     errors = [
         ("error", msg)
-        for msg in get_flashed_messages(False, ACCOUNT_APPEND_FLASH_ERROR_LABEL)
+        for msg in get_flashed_messages(False, FlashType.ERROR.name)
     ]
 
     return [*infos, *errors]
@@ -71,17 +68,17 @@ def _collect_flash_messages():
 
 def _handle_details_change(user: User, form: UserDetailsForm) -> None:
     if not form.validate_on_submit():
-        flash("Request could not be validated.", ACCOUNT_APPEND_FLASH_ERROR_LABEL)
+        flash("Request could not be validated.", FlashType.ERROR.name)
 
     user.set_full_name(form.full_name.data)
     user.set_currency(form.currency.data)
 
-    flash("Details changed.", ACCOUNT_APPEND_FLASH_INFO_LABEL)
+    flash("Details changed.", FlashType.INFO.name)
 
 
 def _handle_token_generation(user: User, form: XApiKeyGenerateForm) -> None:
     if not form.validate_on_submit():
-        flash("Request could not be validated.", ACCOUNT_APPEND_FLASH_ERROR_LABEL)
+        flash("Request could not be validated.", FlashType.ERROR.name)
 
     token = user.set_token()
     user_token = generate_user_token(token)
@@ -89,21 +86,21 @@ def _handle_token_generation(user: User, form: XApiKeyGenerateForm) -> None:
     form.token.default = user_token
     form.token.data = user_token
 
-    flash("Token generated.", ACCOUNT_APPEND_FLASH_INFO_LABEL)
+    flash("Token generated.", FlashType.INFO.name)
 
 
 def _handle_password_change(user: User, form: ChangePasswordForm) -> None:
     if not form.validate_on_submit():
-        flash("Request could not be validated.", ACCOUNT_APPEND_FLASH_ERROR_LABEL)
+        flash("Request could not be validated.", FlashType.ERROR.name)
 
     success = user.set_password(
         current=form.current_passw.data, new=form.new_passw.data
     )
 
     if success:
-        flash("Password changed.", ACCOUNT_APPEND_FLASH_INFO_LABEL)
+        flash("Password changed.", FlashType.INFO.name)
     else:
-        flash("Invalid password.", ACCOUNT_APPEND_FLASH_ERROR_LABEL)
+        flash("Invalid password.", FlashType.ERROR.name)
 
 
 def account_post():
@@ -135,7 +132,7 @@ def account_post():
         username=requested_user.username,
         form_api_token=form_api_token,
         host_url=request.host_url,
-        infos=_collect_flash_messages(),
+        infos=flash_collect(),
     )
 
 
@@ -160,5 +157,5 @@ def account_get():
         username=requested_user.username,
         form_api_token=form_api_token,
         host_url=request.host_url,
-        infos=_collect_flash_messages(),
+        infos=flash_collect(),
     )

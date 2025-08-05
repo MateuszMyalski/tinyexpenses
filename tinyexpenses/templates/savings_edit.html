@@ -1,0 +1,30 @@
+{% extends "index.html" %}
+
+{% block content %}
+<main>
+
+    <h1 class="page-title">Savings edit</h1>
+    <h2>{{ category }}</h2>
+    <form method="POST" class="savings-form">
+        {{ form.hidden_tag() }}
+
+        {{ form.account.label }}
+        {{ form.account() }}
+
+        {{ form.balance.label }}
+        {{ form.balance.description }}
+        {{ form.balance() }}
+
+        <br />
+        {{ form.submit() }}
+
+    </form>
+    <details>
+        <summary>How do accounts work?</summary>
+        <p>You can group your saving categories by assigning them the same account name.</p>
+    </details>
+
+
+</main>
+
+{% endblock %}

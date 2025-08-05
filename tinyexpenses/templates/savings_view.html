@@ -1,0 +1,54 @@
+{% extends "index.html" %}
+
+{% block content %}
+<main>
+    <h1 class="page-title">Savings</h1>
+    {% if savings_by_account.items() | length == 0 %}
+    <p>No savings have been registered yet.</p>
+    <p>To start saving, add an expense categorized as a saving type.</p>
+    {% endif %}
+    {% for account, savings in savings_by_account.items() %}
+    <table class="savings-view">
+        <thead>
+            <tr class="account-name-row">
+                <th colspan="4">{{ account }}</th>
+            </tr>
+            <tr>
+                <th>Category</th>
+                <th colspan="2">Balance</th>
+                <th class="actions-cell">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for saving in savings.values() %}
+            <tr>
+                <td class="category-type-cell">{{ saving.category }}</td>
+                <td class="amount-cell">{{ saving.balance | format_number }} {{ currency }}</td>
+                <td class="amount-prcnt-cell">{{ (saving.balance / savings_account_totals[account] * 100) | round(1) |
+                    format_number }} %</td>
+                <td class="actions-cell">
+                    <form method="POST" class="savings-actions-form">
+                        {{ savings_by_category_form[saving.category].hidden_tag() }}
+                        {{
+                        savings_by_category_form[saving.category].submit_edit(formaction=url_for('main.savings_edit'))
+                        }}
+                        {{
+                        savings_by_category_form[saving.category].submit_withdraw(formaction=url_for('main.savings_withdraw'))
+                        }}
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+            <tr class="total-row">
+                <td class="category-type-cell">Total</td>
+                <td class="total-amount-cell" colspan="2">{{ savings_account_totals[account] | format_number}} {{
+                    currency }}</td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+    {% endfor %}
+
+
+</main>
+{% endblock %}

@@ -1,9 +1,8 @@
 from flask import render_template, get_flashed_messages, flash, redirect
 from flask_wtf import FlaskForm
 from wtforms import SubmitField, HiddenField
+from .models.flash import FlashType, flash_collect
 import json
-
-CSV_EDITOR_FLASH_LABEL = "csv_editor_info"
 
 
 class FileEditForm(FlaskForm):
@@ -26,7 +25,7 @@ def handle_csv_data_edit(
     table_data = json.loads(form.table_data.data)
     store_data_cb(ctx, table_data)
 
-    flash("File edited successfully!", CSV_EDITOR_FLASH_LABEL)
+    flash("File edited successfully!", FlashType.INFO.name)
     return redirect(redirect_on_success_url)
 
 
@@ -36,14 +35,10 @@ def render_csv_data_edit_form(
 ):
     form = FileEditForm()
 
-    flashed_info = [
-        ("info", msg) for msg in get_flashed_messages(False, CSV_EDITOR_FLASH_LABEL)
-    ]
-
     return render_template(
         "csv_edit.html",
         form=form,
         col_labels=col_labels,
         content=csv_content,
-        infos=flashed_info,
+        infos=flash_collect(),
     )

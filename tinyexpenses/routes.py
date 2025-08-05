@@ -4,16 +4,23 @@ from flask_login import login_required
 from functools import wraps
 from werkzeug import Response
 from .expenses_view import expenses_view_year_get, expenses_view_month_get
-from .expenses_append import expenses_append_get, expenses_append_post, expenses_append_api_put
+from .expenses_append import (
+    expenses_append_get,
+    expenses_append_post,
+    expenses_append_api_put,
+)
 from .expenses_create import expenses_create_get, expenses_create_post
 from .expenses_edit import expenses_edit_get, expenses_edit_post
-from .extensions import bp, users_db, login_manager, csrf
+from .extensions import bp, users_db, login_manager, csrf, app
 from .auth import auth_authenticate_post, auth_logout
 from .categories_create import categories_create_post, categories_create_get
 from .categories_edit import categories_edit_get, categories_edit_post
 from .account import account_post, account_get
 from .token import verify_user_token
 from .dashboard import dashboard_get
+from .savings_view import savings_view_get
+from .savings_edit import savings_edit_post
+from .savings_withdraw import savings_withdraw_post
 
 
 def handle_uncaught_exceptions(f):
@@ -22,6 +29,10 @@ def handle_uncaught_exceptions(f):
         try:
             return f(*args, **kwargs)
         except Exception as e:
+            if app.debug:
+                import traceback
+                traceback.print_exc()
+
             return render_template("error.html", message=str(e))
 
     return wrapper
@@ -69,6 +80,36 @@ def index() -> str | Response:
 @login_required
 def logout():
     return auth_logout()
+
+
+@bp.route("/savings/edit", methods=("POST",))
+@handle_uncaught_exceptions
+@login_required
+def savings_edit():
+    if request.method == "POST":
+        return savings_edit_post()
+
+    return render_template("404.html")
+
+
+@bp.route("/savings/withdraw", methods=("POST",))
+@handle_uncaught_exceptions
+@login_required
+def savings_withdraw():
+    if request.method == "POST":
+        return savings_withdraw_post()
+
+    return render_template("404.html")
+
+
+@bp.route("/savings/view", methods=("GET",))
+@handle_uncaught_exceptions
+@login_required
+def savings_view():
+    if request.method == "GET":
+        return savings_view_get()
+
+    return render_template("404.html")
 
 
 @bp.route("/expenses/create/<year>", methods=("GET", "POST"))

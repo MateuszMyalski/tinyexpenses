@@ -6,8 +6,9 @@ from enum import Enum
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from .categories import CategoryType
+from collections import defaultdict
 
-from .file import DbFile
+from .file import DbFile, DbCSVReader, DbCSVWriter
 
 
 @dataclass
@@ -77,6 +78,10 @@ class ExpenseRecord:
             self.index = index
             self.label = label
 
+        @classmethod
+        def labels(cls):
+            return [column.label for column in cls]
+
     def __init__(
         self,
         timestamp: str | datetime,
@@ -124,66 +129,59 @@ class ExpenseRecord:
             )
         )
 
+    def serialize(self) -> list[str]:
+        row = [str()] * len(self.Columns)
+        row[self.Columns.AMOUNT.index] = f"{self.amount:.2f}"
+        row[self.Columns.CATEGORY.index] = self.category
+        row[self.Columns.TIMESTAMP.index] = self.timestamp.strftime("%Y-%m-%d %H:%M:%S")
+        row[self.Columns.DESCRIPTION.index] = self.description
+        row[self.Columns.EXPENSE_DATE.index] = self.expense_date.strftime("%Y-%m-%d")
+
+        return row
+
 
 class YearExpensesReport:
     def __init__(self, db_file: DbFile):
-        self.db_file: DbFile = db_file
-        self.expenses_records: list[ExpenseRecord] = list()
-        self.expenses_by_category: dict[str, list[ExpenseRecord]] = dict()
-        self.expenses_by_category_monthly_totals: dict[str, YearExpensesTotals] = dict()
+        self._db_file: DbFile = db_file
+        self._by_category: dict[str, list[ExpenseRecord]] = defaultdict(list)
+        self._category_monthly_totals: dict[str, YearExpensesTotals] = defaultdict(
+            YearExpensesTotals
+        )
         self.initial_balance: float = 0.0
 
         self._load_expenses()
         self._sum_expenses_by_category_per_month()
 
     def _load_expenses(self) -> None:
-        if not self.db_file.exists():
-            raise FileNotFoundError(f"File {self.db_file.get_path()} does not exist.")
+        if not self._db_file.exists():
+            raise FileNotFoundError(f"File {self._db_file.get_path()} does not exist.")
 
-        with open(self.db_file.get_path(), mode="r", newline="") as file:
-            reader = csv.reader(file)
-
-            for row, record in enumerate(reader):
-                # Empty line
-                if len(record) == 0:
-                    continue
-
-                if len(record) != len(ExpenseRecord.Columns):
-                    raise Exception(
-                        f"Cannot parse: {file.name}:{row + 1} - Read {len(record)} columns. Expected {len(ExpenseRecord.Columns)} elements."
-                    )
-
+        with DbCSVReader(self._db_file, ExpenseRecord.Columns.labels()) as reader:
+            for row, line in reader.read():
                 try:
-                    expense = ExpenseRecord(
-                        timestamp=record[ExpenseRecord.Columns.TIMESTAMP.index],
-                        category=record[ExpenseRecord.Columns.CATEGORY.index],
-                        expense_date=record[ExpenseRecord.Columns.EXPENSE_DATE.index],
-                        amount=record[ExpenseRecord.Columns.AMOUNT.index],
-                        description=record[ExpenseRecord.Columns.DESCRIPTION.index],
-                    )
+                    expense = ExpenseRecord(*line)
                 except Exception as reason:
-                    raise Exception(f"Cannot parse: {file.name}:{row + 1} - {reason}.")
+                    raise Exception(
+                        f"Cannot parse: {self._db_file.get_file_name()}:{row + 1} - {reason}."
+                    )
 
                 if expense.category == CategoryType.INITIAL_BALANCE_LABEL.value:
                     self.initial_balance = expense.amount
 
-                self.expenses_records.append(expense)
-                self.expenses_by_category.setdefault(expense.category, []).append(
-                    expense
-                )
+                self._by_category[expense.category].append(expense)
 
     def _sum_expenses_by_category_per_month(self) -> None:
-        for category, expenses in self.expenses_by_category.items():
+        for category, expenses in self._by_category.items():
             for expense in expenses:
-                self.expenses_by_category_monthly_totals.setdefault(
-                    category, YearExpensesTotals()
-                ).totals[expense.expense_date.month - 1] += expense.amount
+                self._category_monthly_totals[category].totals[
+                    expense.expense_date.month - 1
+                ] += expense.amount
 
     def get_expenses_by_category_monthly_totals(self) -> dict[str, YearExpensesTotals]:
-        return self.expenses_by_category_monthly_totals
+        return self._category_monthly_totals
 
     def get_expenses(self) -> list[ExpenseRecord]:
-        return self.expenses_records
+        return sum(self._by_category.values(), [])
 
     @staticmethod
     def insert_expense(
@@ -196,29 +194,34 @@ class YearExpensesReport:
         if not db_file.exists():
             raise FileNotFoundError("Expenses file does not exists.")
 
-        with open(db_file.get_path(), mode="a", newline="") as file:
-            writer = csv.writer(file)
-            for expense in expenses:
-                row = [str()] * len(ExpenseRecord.Columns)
-                row[ExpenseRecord.Columns.AMOUNT.index] = f"{expense.amount:.2f}"
-                row[ExpenseRecord.Columns.CATEGORY.index] = expense.category
-                row[ExpenseRecord.Columns.TIMESTAMP.index] = expense.timestamp.strftime(
-                    "%Y-%m-%d %H:%M:%S"
-                )
-                row[ExpenseRecord.Columns.DESCRIPTION.index] = expense.description
-                row[ExpenseRecord.Columns.EXPENSE_DATE.index] = (
-                    expense.expense_date.strftime("%Y-%m-%d")
-                )
+        db_file.backup()
 
-                writer.writerow(row)
+        try:
+            with DbCSVWriter(
+                db_file, ExpenseRecord.Columns.labels(), append_mode=True
+            ) as writer:
+                for expense in expenses:
+                    writer.write(expense.serialize())
+
+        except Exception as e:
+            db_file.restore()
+            raise e
 
     @staticmethod
     def store(db_file: DbFile, expenses: list[ExpenseRecord]) -> None:
+        if not db_file.exists():
+            raise FileNotFoundError("Expenses file does not exists.")
+
         db_file.backup()
         db_file.erase()
 
         try:
-            YearExpensesReport.insert_expense(db_file, expenses)
+            with DbCSVWriter(
+                db_file, ExpenseRecord.Columns.labels(), append_mode=True
+            ) as writer:
+                for expense in expenses:
+                    writer.write(expense.serialize())
+
         except Exception as e:
             db_file.restore()
             raise e

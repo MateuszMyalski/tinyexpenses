@@ -27,7 +27,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 30px;
+  gap: 10px;
 }
 
 a {
@@ -37,6 +37,11 @@ a {
 
 a:hover {
   color: var(--link-hover-color);
+}
+
+div.infos {
+  width: 100%;
+  max-width: 600px;
 }
 
 div.info-message {
@@ -51,9 +56,6 @@ div.info-message {
   padding: 10px 15px;
   margin: 10px 0;
   
-  width: 100%;
-  max-width: 600px;
-
   box-sizing: border-box;
 }
 
@@ -131,7 +133,8 @@ footer span#heart {
 form.login-form,
 form.config-form,
 form.expenses-append-form,
-form.create-form {
+form.create-form,
+form.savings-form {
   display: flex;
   flex-direction: column;
 
@@ -145,7 +148,8 @@ form.middle {
 form.login-form > label,
 form.config-form > label,
 form.expenses-append-form > label,
-form.create-form > label {
+form.create-form > label,
+form.savings-form > label {
   margin-top: 10px;
   margin-bottom: 2px;
 
@@ -156,7 +160,8 @@ form.create-form > label {
 form.login-form > label:after,
 form.config-form > label:after,
 form.expenses-append-form > label:after,
-form.create-form > label:after {
+form.create-form > label:after,
+form.savings-form > label:after {
   content: ":";
 }
 
@@ -166,6 +171,8 @@ form.config-form > input#token-token {
 
 form.login-form > input,
 form.config-form > input,
+form.savings-form > input,
+form.savings-form > select,
 form.expenses-append-form > input,
 form.expenses-append-form > select,
 form.expenses-append-form > textarea,
@@ -191,6 +198,26 @@ form.expenses-append-form > input[type="date"] {
   -webkit-appearance: none;
 }
 
+form.savings-actions-form > input[type="submit"] {
+  background-color: var(--bg-color);
+
+  padding: 3px 10px;
+  
+  cursor: pointer;
+  
+  color: var(--text-color);
+
+  font-size: 1em;
+  
+  border: 1px solid var(--accent1);
+  border-radius: 0;
+
+  box-sizing: border-box;
+
+  margin: 5px 0;
+}
+
+
 form.login-form > input[type="submit"],
 form.config-form > input[type="submit"],
 form.expenses-append-form > input[type="submit"],
@@ -215,11 +242,13 @@ form.csv-edit-form > input[type="submit"] {
   box-sizing: border-box;
 }
 
+form.savings-actions-form > input[type="submit"]:hover,
 form.login-form > input[type="submit"]:hover,
 form.config-form > input[type="submit"]:hover,
 form.expenses-append-form > input[type="submit"]:hover,
 form.create-form > input[type="submit"]:hover,
-form.csv-edit-form > input[type="submit"]:hover {
+form.csv-edit-form > input[type="submit"]:hover,
+form.savings-form > input[type="submit"]:hover {
   filter: invert(2.0);
 }
 
@@ -302,6 +331,50 @@ table#csv-view tr td.row-number-cell:first-child::before {
   margin-right: 1em;
 }
 
+table.savings-view:not(:last-of-type) {
+   margin-bottom: 30px;
+}
+
+table.savings-view {
+  border: 1px solid var(--text-color);
+  border-collapse: collapse;
+
+  font-size: 1.1em;
+  
+  margin-left: auto;
+  margin-right: auto;
+
+  width: 90%;
+}
+
+table.savings-view th {
+  text-align: center;
+
+  padding: 6px 0px;
+}
+
+table.savings-view tr.account-name-row th {
+  text-align: center;
+}
+
+table.savings-view td.actions-cell {
+  border: none;
+
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+}
+
+table.savings-view td {
+  border: 1px solid var(--text-color);
+
+  padding: 0.2em 0;
+}
+
+table.savings-view tr:nth-child(even) {
+  background-color: var(--accent2);
+}
+
 table.expenses-view,
 table#csv-view {
   border: 1px solid var(--text-color);
@@ -312,11 +385,19 @@ table#csv-view {
   font-size: 1.1em;
 }
 
+table.savings-view tbody tr.total-row td,
+table.savings-view thead tr th {
+  background-color: var(--accent2);
+
+}
+
+table.savings-view thead tr th,
 table.expenses-view thead tr th,
 table#csv-view thead tr th {
   text-transform: uppercase;
 }
 
+table.savings-view tr,
 table.expenses-view tr,
 table#csv-view tr {
   border: 1px solid var(--text-color);
@@ -342,14 +423,19 @@ table.expenses-view.year td:not(.category-type-cell) {
   white-space: nowrap;
 }
 
+table.savings-view td.category-cell,
 table.expenses-view td.category-cell{
   font-weight: bold;
 }
 
+table.savings-view td.category-type-cell,
 table.expenses-view td.category-type-cell{
   text-align: center;
 }
 
+table.savings-view  td.amount-cell,
+table.savings-view  td.amount-prcnt-cell,
+table.savings-view  td.total-amount-cell,
 table.expenses-view td.amount-cell,
 table.expenses-view td.amount-prcnt-cell,
 table.expenses-view td.total-amount-cell,
@@ -357,6 +443,7 @@ table.expenses-view td.total-amount-prcnt-cell {
   text-align: right;
 }
 
+table.savings-view td.total-amount-cell,
 table.expenses-view td.total-amount-cell,
 table.expenses-view td.total-amount-prcnt-cell {
   font-weight: bold;
@@ -367,6 +454,7 @@ table.expenses-view td.current-balance-cell {
   font-size: 1.2em;
 }
 
+table.savings-view tbody td,
 table.expenses-view tbody td {
   padding: 0.2em 0.5em;
 }
@@ -394,6 +482,7 @@ table.expenses-view tr.category-row.Savings {
 table.expenses-view tr.category-row.Needs {
   background-color: var(--needs-color);
 }
+
 table.expenses-view tr.total-by-month-row {
   background-color: var(--bg-color);
 }
@@ -433,6 +522,10 @@ details > pre {
 
   header pre {
     font-size: 0.5em;
+  }
+
+  table.savings-view td.actions-cell input[type="submit"] {
+    width: 100%;
   }
 
   form.login-form,
