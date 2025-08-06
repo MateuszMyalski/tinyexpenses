@@ -7,7 +7,7 @@
     {{ form.hidden_tag() }}
 
     {{ form.category.label }}
-    {{ form.category() }}
+    {{ form.category(class_="select2") }}
 
     {{ form.expense_date.label }}
     {{ form.expense_date(min=current_year ~ '-01-01', max=current_year ~ '-12-31') }}
@@ -32,4 +32,13 @@
   </details>
 
 </main>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+  $(document).ready(function () {
+    $('.select2').select2();
+  });
+</script>
 {% endblock %}

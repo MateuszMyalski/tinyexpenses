@@ -30,6 +30,11 @@
                     </select>
                 </th>
             </tr>
+            <tr class="row-separator">
+                <td colspan="3" class="current-balance-cell">💸 Current balance: {{ current_balance | round(2) |
+                    format_number}}
+                    {{ currency }}</td>
+            </tr>
             <tr>
                 <th class="category">Category</th>
                 <th class="category-type">Type</th>

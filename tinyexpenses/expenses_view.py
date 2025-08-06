@@ -1,9 +1,10 @@
-from flask import render_template, redirect, url_for
+from flask import render_template, redirect, url_for, jsonify, request
 from flask_login import current_user
 from .models.expenses import YearExpensesReport, YearExpensesTotals
 from .models.categories import CategoryType, YearCategories
 from .extensions import users_db
 import calendar
+import json
 
 
 def _sort_monthly_expenses_by_category_types(
@@ -161,3 +162,57 @@ def expenses_view_month_get(year: int, month: int):
         CategoryType=CategoryType,
         month_names=calendar.month_name[1:],
     )
+
+
+def expenses_view_balance_api_get(username):
+    if request.headers.get("Content-type", "") != "application/json":
+        return jsonify({"status": "Content-type nor supported."}), 400
+
+    requested_user = users_db.get(username)
+
+    if requested_user is None:
+        return jsonify({"status": "Unauthorized"}), 401
+
+    try:
+        user_request_data = json.loads(request.data.decode())
+        year = user_request_data["year"]
+    except Exception as e:
+        return jsonify(
+            {
+                "status": "Could not parse request.",
+                "received_content": f"{request.data.decode()}",
+                "exception:": f"{e}",
+            }
+        ), 400
+
+    try:
+        year_expenses_file = requested_user.get_expenses_report_file(year)
+        year_report = YearExpensesReport(year_expenses_file)
+        expenses_monthly_totals_by_category = (
+            year_report.get_expenses_by_category_monthly_totals()
+        )
+
+        year_categories_file = requested_user.get_categories_file(year)
+        year_categories = YearCategories(year_categories_file)
+
+    except Exception:
+        return jsonify(
+            {
+                "status": f"Could not read expense/categories file for given year {year}."
+            }
+        ), 500
+
+    for category_record in year_categories.get_categories():
+        if category_record.category not in expenses_monthly_totals_by_category:
+            expenses_monthly_totals_by_category[category_record.category] = (
+                YearExpensesTotals()
+            )
+
+    expenses_monthly_totals_by_category_type = _sort_monthly_expenses_by_category_types(
+        expenses_monthly_totals_by_category, year_categories
+    )
+    _, monthly_balance, _ = _calculate_yearly_expenses_stats(
+        expenses_monthly_totals_by_category_type
+    )
+
+    return jsonify({"status": "Ok", "monthly_balance": round(year_report.initial_balance + sum(monthly_balance), 2)}), 200

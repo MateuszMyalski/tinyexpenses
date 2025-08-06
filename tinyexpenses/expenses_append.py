@@ -36,7 +36,7 @@ class AppendExpenseForm(FlaskForm):
             raise ValidationError("Only dates from the current year are allowed.")
 
     category = SelectField(
-        "Category", [validators.DataRequired()], choices=[], coerce=str
+        "Category", [validators.DataRequired()], choices={}, coerce=str
     )
     expense_date = DateField(
         "Date",
@@ -51,10 +51,10 @@ class AppendExpenseForm(FlaskForm):
     )
     submit = SubmitField("Submit")
 
-    def populate_category_choices(self, categories: list[CategoryRecord]):
-        self.category.choices = list(
-            map(lambda item: (item.category, item.category), categories)
-        )
+    def populate_category_choices(self, year_categories: YearCategories):
+        self.category.choices = {}
+        for category_type, categories in year_categories._by_category_type.items():
+            self.category.choices[category_type.name] = list(categories)
 
 
 def expenses_append_get():
@@ -68,7 +68,7 @@ def expenses_append_get():
     year_categories = YearCategories(year_categories_file)
 
     form = AppendExpenseForm()
-    form.populate_category_choices(year_categories.get_categories())
+    form.populate_category_choices(year_categories)
 
     return render_template(
         "expenses_append.html",
@@ -104,7 +104,7 @@ def expenses_append_post():
     year_categories = YearCategories(year_categories_file)
 
     form = AppendExpenseForm()
-    form.populate_category_choices(year_categories.get_categories())
+    form.populate_category_choices(year_categories)
 
     if not form.validate_on_submit():
         return render_template(

@@ -21,8 +21,8 @@ body {
   background-color: var(--bg-color);
   color: var(--text-color);
 
-  font-size: 1em;
-  font-family: monospace;
+  font-size: 0.9em;
+  font-family: "Courier New", Courier, monospace;
 
   display: flex;
   flex-direction: column;
@@ -90,7 +90,7 @@ header pre {
 }
 
 header nav {
-  border-bottom: 1px solid var(--accent1);
+  border-bottom: 1px solid var(--accent2);
 
   margin-top: 30px;
 
@@ -108,7 +108,7 @@ header nav a {
 }
 
 footer {
-  border-top: 1px solid var(--accent1);
+  border-top: 1px solid var(--accent2);
   
   padding-top: 1em;
 
@@ -167,6 +167,41 @@ form.savings-form > label:after {
 
 form.config-form > input#token-token {
   user-select: all;
+}
+
+.select2-container--default .select2-selection--single {
+  background-color: var(--bg-color);
+
+  border: 1px solid var(--accent1);
+  border-radius: 0;
+
+  box-sizing: content-box;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+  color: var(--text-color);
+
+  font-family: Arial;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow b {
+  border-color: black transparent transparent transparent;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+  color: var(--text-color);
+}
+
+.select2-container--default .select2-results>.select2-results__options {
+  font-family: Arial;
+}
+
+.select2-container--default .select2-search--dropdown .select2-search__field {
+  border: 1px solid var(--accent1);
+
+  background-color: var(--bg-color);
+
+    border-radius: 0;
 }
 
 form.login-form > input,
@@ -402,16 +437,7 @@ table#csv-view tr {
 
 table.expenses-view.year td {
   border: 1px dashed var(--text-color);
-}
-
-table.expenses-view.year td.category-cell {
-  position: sticky;
-  z-index: 2;
-  left: 0;
-
-  background-color: inherit;
-
-  text-transform: uppercase;
+  font-size: 0.9em;
 }
 
 table.expenses-view.year th:not(.category-type-header),
@@ -420,6 +446,7 @@ table.expenses-view.year td:not(.category-type-cell) {
   white-space: nowrap;
 }
 
+table.savings-view td.category-type-cell,
 table.savings-view td.category-cell,
 table.expenses-view td.category-cell{
   font-weight: bold;
@@ -448,7 +475,10 @@ table.expenses-view td.total-amount-prcnt-cell {
 
 table.expenses-view td.current-balance-cell {
   text-align: center;
+
   font-size: 1.2em;
+
+  font-weight: bold;
 }
 
 table.savings-view tbody td,
@@ -456,6 +486,7 @@ table.expenses-view tbody td {
   padding: 0.2em 0.5em;
 }
 
+.active-hover,
 tr.category-row:hover {
   filter: invert(2.38);
 
@@ -528,8 +559,9 @@ details > pre {
   form.login-form,
   form.config-form,
   form.expenses-append-form,
-  form.create-form {
-    width: 80%;
+  form.create-form,
+  form.savings-form {
+    width: 100%;
   }
 
 }

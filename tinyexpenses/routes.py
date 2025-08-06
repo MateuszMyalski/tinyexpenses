@@ -3,11 +3,11 @@ from flask import request, render_template, redirect, url_for, jsonify
 from flask_login import login_required
 from functools import wraps
 from werkzeug import Response
-from .expenses_view import expenses_view_year_get, expenses_view_month_get
+from .expenses_view import expenses_view_year_get, expenses_view_month_get, expenses_view_balance_api_get
 from .expenses_append import (
     expenses_append_get,
     expenses_append_post,
-    expenses_append_api_put,
+    expenses_append_api_put
 )
 from .expenses_create import expenses_create_get, expenses_create_post
 from .expenses_edit import expenses_edit_get, expenses_edit_post
@@ -143,6 +143,12 @@ def expenses_append():
 @csrf.exempt
 def expenses_append_api(username):
     return expenses_append_api_put(username)
+
+@bp.route("/api/v1/<username>/expenses/balance", methods=("GET",))
+# @api_key_required
+@csrf.exempt
+def expenses_view_balance_api(username):
+    return expenses_view_balance_api_get(username)
 
 
 @bp.route("/expenses/edit/<year>", methods=("GET", "POST"))
