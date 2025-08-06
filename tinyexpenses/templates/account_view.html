@@ -57,7 +57,6 @@
 PUT {{ host_url }}v1.0/{{ username }}/expenses/append HTTP/1.1
 X-API-Key: (Here put your X-API key)
 Content-type: application/json
-Content-Length: (length of the JSON content)
 
 {
   "category": "sample-category",
@@ -67,6 +66,20 @@ Content-Length: (length of the JSON content)
 }
             </pre>
             Fields: "expense_date" and "description" are optional.
+        </details>
+
+        <details name="api-details">
+            <summary>View month balance - example request</summary>
+            <pre>
+GET {{ host_url }}v1.0/{{ username }}/expenses/view/balance HTTP/1.1
+X-API-Key: (Here put your X-API key)
+Content-type: application/json
+
+{
+  "year": 2025,
+}
+            </pre>
+            Field: "year" is optional
         </details>
     </div>
 

@@ -144,11 +144,11 @@ def expenses_append():
 def expenses_append_api(username):
     return expenses_append_api_put(username)
 
-@bp.route("/api/v1/<username>/expenses/balance", methods=("GET",))
-# @api_key_required
+@bp.route("/api/v1/<username>/expenses/view/balance/<year>", methods=("GET",))
+@api_key_required
 @csrf.exempt
-def expenses_view_balance_api(username):
-    return expenses_view_balance_api_get(username)
+def expenses_view_balance_api(username, year):
+    return expenses_view_balance_api_get(username, year)
 
 
 @bp.route("/expenses/edit/<year>", methods=("GET", "POST"))
@@ -156,10 +156,10 @@ def expenses_view_balance_api(username):
 @login_required
 def expenses_edit(year: int):
     if request.method == "POST":
-        return expenses_edit_post(year)
+        return expenses_edit_post(int(year))
 
     if request.method == "GET":
-        return expenses_edit_get(year)
+        return expenses_edit_get(int(year))
 
     return render_template("404.html")
 
@@ -168,7 +168,7 @@ def expenses_edit(year: int):
 @handle_uncaught_exceptions
 @login_required
 def expenses_view_month(year: int, month: int):
-    return expenses_view_month_get(year, month)
+    return expenses_view_month_get(int(year), int(month))
 
 
 @bp.route("/expenses/view/", defaults={"year": None}, methods=["GET", "POST"])
@@ -179,7 +179,7 @@ def expenses_view_year(year: int | None):
     if year is None:
         year = datetime.now().year
 
-    return expenses_view_year_get(year)
+    return expenses_view_year_get(int(year))
 
 
 @bp.route("/categories/edit/<year>", methods=("GET", "POST"))

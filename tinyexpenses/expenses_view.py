@@ -5,214 +5,154 @@ from .models.categories import CategoryType, YearCategories
 from .extensions import users_db
 import calendar
 import json
+from datetime import datetime
 
 
-def _sort_monthly_expenses_by_category_types(
-    expenses_by_category: dict[str, YearExpensesTotals], categories: YearCategories
-) -> dict[CategoryType, dict[str, YearExpensesTotals]]:
+def _sort_monthly_expenses_by_category_types(expenses_by_category, categories):
     result = {ct: {} for ct in CategoryType}
-
-    for category, expenses_by_month in expenses_by_category.items():
-        if category in categories[CategoryType.INCOME]:
-            result[CategoryType.INCOME][category] = expenses_by_month
-        elif category in categories[CategoryType.NEEDS]:
-            result[CategoryType.NEEDS][category] = expenses_by_month
-        elif category in categories[CategoryType.SAVINGS]:
-            result[CategoryType.SAVINGS][category] = expenses_by_month
-        elif category in categories[CategoryType.WANTS]:
-            result[CategoryType.WANTS][category] = expenses_by_month
-
+    for category, expenses in expenses_by_category.items():
+        for ct in CategoryType:
+            if category in categories[ct]:
+                result[ct][category] = expenses
+                break
     return result
 
 
-def _calculate_yearly_expenses_stats(
-    expenses_monthly_totals_by_category_type: dict[
-        CategoryType, dict[str, YearExpensesTotals]
-    ],
-) -> tuple[dict, YearExpensesTotals, dict]:
+def _calculate_yearly_expenses_stats(expenses_by_category_type):
     year_totals = {}
     monthly_balance = YearExpensesTotals()
-    monthly_balance_per_category_type = {}
+    balance_per_type = {}
 
-    for category_type, categories in expenses_monthly_totals_by_category_type.items():
-        sign: int = 1 if category_type == CategoryType.INCOME else -1
-        for _, totals in categories.items():
+    for ct, categories in expenses_by_category_type.items():
+        sign = 1 if ct == CategoryType.INCOME else -1
+        for totals in categories.values():
             monthly_balance += totals * sign
+            balance_per_type.setdefault(ct, YearExpensesTotals())
+            balance_per_type[ct] += totals * sign
+            year_totals[ct] = year_totals.get(ct, 0.0) + sum(totals) * sign
 
-            monthly_balance_per_category_type.setdefault(
-                category_type, YearExpensesTotals()
-            )
-            monthly_balance_per_category_type[category_type] += totals * sign
+    return year_totals, monthly_balance, balance_per_type
 
-            year_totals.setdefault(category_type, float())
-            year_totals[category_type] += sum(totals) * sign
 
-    return year_totals, monthly_balance, monthly_balance_per_category_type
+def _get_user_or_abort(user_id):
+    user = users_db.get(user_id)
+    if user is None:
+        return None, render_template("error.html", message="User not found.")
+    return user, None
+
+
+def _load_year_data(user, year):
+    try:
+        report = YearExpensesReport(user.get_expenses_report_file(year))
+    except FileNotFoundError:
+        return None, None, redirect(url_for("main.expenses_create", year=year))
+
+    try:
+        categories = YearCategories(user.get_categories_file(year))
+    except FileNotFoundError:
+        return None, None, redirect(url_for("main.categories_create", year=year))
+
+    return report, categories, None
+
+
+def _complete_missing_categories(data, categories):
+    for record in categories.get_categories():
+        data.setdefault(record.category, YearExpensesTotals())
+
+
+def _prepare_context(user, report, categories, year):
+    data = report.get_expenses_by_category_monthly_totals()
+    _complete_missing_categories(data, categories)
+    grouped = _sort_monthly_expenses_by_category_types(data, categories)
+    year_totals, monthly_balance, balance_per_type = _calculate_yearly_expenses_stats(
+        grouped
+    )
+
+    return {
+        "expenses_by_type": grouped,
+        "year_totals": year_totals,
+        "monthly_balance": monthly_balance,
+        "balance_per_type": balance_per_type,
+        "current_balance": report.initial_balance + sum(monthly_balance),
+        "currency": user.currency,
+    }
 
 
 def expenses_view_year_get(year: int):
-    requested_user = users_db.get(current_user.id)
+    user, error = _get_user_or_abort(current_user.id)
+    if error:
+        return error
 
-    if requested_user is None:
-        return render_template("error.html", message="User not found.")
+    report, categories, redirect_response = _load_year_data(user, year)
+    if redirect_response:
+        return redirect_response
 
-    try:
-        year_expenses_file = requested_user.get_expenses_report_file(year)
-        year_expense = YearExpensesReport(year_expenses_file)
-    except FileNotFoundError as _:
-        return redirect(url_for("main.expenses_create", year=year))
-
-    try:
-        year_categories_file = requested_user.get_categories_file(year)
-        year_categories = YearCategories(year_categories_file)
-    except FileNotFoundError as _:
-        return redirect(url_for("main.categories_create", year=year))
-
-    expenses_monthly_totals_by_category = (
-        year_expense.get_expenses_by_category_monthly_totals()
-    )
-
-    # Ensure all categories are present in expenses_by_category, missing ones set to 0
-    for category_record in year_categories.get_categories():
-        if category_record.category not in expenses_monthly_totals_by_category:
-            expenses_monthly_totals_by_category[category_record.category] = (
-                YearExpensesTotals()
-            )
-
-    expenses_monthly_totals_by_category_type: dict[
-        CategoryType, dict[str, YearExpensesTotals]
-    ] = _sort_monthly_expenses_by_category_types(
-        expenses_monthly_totals_by_category, year_categories
-    )
-
-    year_totals, monthly_balance, monthly_balance_per_category_type = (
-        _calculate_yearly_expenses_stats(expenses_monthly_totals_by_category_type)
-    )
-
+    context = _prepare_context(user, report, categories, year)
     return render_template(
         "expenses_view_year.html",
         year=year,
-        expenses_monthly_totals_by_category_type=expenses_monthly_totals_by_category_type,
-        year_totals=year_totals,
-        monthly_balance=monthly_balance,
-        monthly_balance_per_category_type=monthly_balance_per_category_type,
-        currency=requested_user.currency,
+        expenses_monthly_totals_by_category_type=context["expenses_by_type"],
+        year_totals=context["year_totals"],
+        monthly_balance=context["monthly_balance"],
+        monthly_balance_per_category_type=context["balance_per_type"],
+        currency=context["currency"],
         title=f"{year} expenses",
-        available_years=requested_user.get_available_expenses_reports(),
-        current_balance=year_expense.initial_balance + sum(monthly_balance),
+        available_years=user.get_available_expenses_reports(),
+        current_balance=context["current_balance"],
         CategoryType=CategoryType,
         month_names=calendar.month_name[1:],
     )
 
 
 def expenses_view_month_get(year: int, month: int):
-    requested_user = users_db.get(current_user.id)
+    user, error = _get_user_or_abort(current_user.id)
+    if error:
+        return error
 
-    if requested_user is None:
-        return render_template("error.html", message="User not found.")
+    if month not in range(1, len(calendar.month_name)):
+        return render_template("error.html", message="Invalid month."), 400
 
-    try:
-        if int(month) not in range(1, len(calendar.month_name)):
-            raise ValueError(f"Invalid month number {month}")
+    report, categories, redirect_response = _load_year_data(user, year)
+    if redirect_response:
+        return redirect_response
 
-        year_expenses_file = requested_user.get_expenses_report_file(year)
-        year_report = YearExpensesReport(year_expenses_file)
-    except FileNotFoundError as _:
-        return redirect(url_for("main.expenses_create", year=year))
-
-    try:
-        year_categories_file = requested_user.get_categories_file(year)
-        year_categories = YearCategories(year_categories_file)
-    except FileNotFoundError as _:
-        return redirect(url_for("main.categories_create", year=year))
-
-    expenses_monthly_totals_by_category = (
-        year_report.get_expenses_by_category_monthly_totals()
-    )
-
-    # Ensure all categories are present in expenses_by_category, missing ones set to 0
-    for category_record in year_categories.get_categories():
-        if category_record.category not in expenses_monthly_totals_by_category:
-            expenses_monthly_totals_by_category[category_record.category] = (
-                YearExpensesTotals()
-            )
-
-    expenses_monthly_totals_by_category_type: dict[
-        CategoryType, dict[str, YearExpensesTotals]
-    ] = _sort_monthly_expenses_by_category_types(
-        expenses_monthly_totals_by_category, year_categories
-    )
-
-    year_totals, monthly_balance, monthly_balance_per_category_type = (
-        _calculate_yearly_expenses_stats(expenses_monthly_totals_by_category_type)
-    )
-
+    context = _prepare_context(user, report, categories, year)
     return render_template(
         "expenses_view_month.html",
         year=year,
-        month=int(month) - 1,
-        expenses_monthly_totals_by_category_type=expenses_monthly_totals_by_category_type,
-        year_totals=year_totals,
-        monthly_balance=monthly_balance,
-        monthly_balance_per_category_type=monthly_balance_per_category_type,
-        currency=requested_user.currency,
+        month=month - 1,
+        expenses_monthly_totals_by_category_type=context["expenses_by_type"],
+        year_totals=context["year_totals"],
+        monthly_balance=context["monthly_balance"],
+        monthly_balance_per_category_type=context["balance_per_type"],
+        currency=context["currency"],
         title=f"{month}/{year} expenses",
-        available_years=requested_user.get_available_expenses_reports(),
-        current_balance=year_report.initial_balance + sum(monthly_balance),
+        available_years=user.get_available_expenses_reports(),
+        current_balance=context["current_balance"],
         CategoryType=CategoryType,
         month_names=calendar.month_name[1:],
     )
 
 
-def expenses_view_balance_api_get(username):
-    if request.headers.get("Content-type", "") != "application/json":
-        return jsonify({"status": "Content-type nor supported."}), 400
-
-    requested_user = users_db.get(username)
-
-    if requested_user is None:
+def expenses_view_balance_api_get(username, year):
+    user, error = _get_user_or_abort(username)
+    if error:
         return jsonify({"status": "Unauthorized"}), 401
 
     try:
-        user_request_data = json.loads(request.data.decode())
-        year = user_request_data["year"]
-    except Exception as e:
-        return jsonify(
-            {
-                "status": "Could not parse request.",
-                "received_content": f"{request.data.decode()}",
-                "exception:": f"{e}",
-            }
-        ), 400
+        year = int(year)
+    except Exception:
+        year = datetime.now().date().year
 
     try:
-        year_expenses_file = requested_user.get_expenses_report_file(year)
-        year_report = YearExpensesReport(year_expenses_file)
-        expenses_monthly_totals_by_category = (
-            year_report.get_expenses_by_category_monthly_totals()
-        )
-
-        year_categories_file = requested_user.get_categories_file(year)
-        year_categories = YearCategories(year_categories_file)
-
+        report = YearExpensesReport(user.get_expenses_report_file(year))
+        categories = YearCategories(user.get_categories_file(year))
     except Exception:
         return jsonify(
-            {
-                "status": f"Could not read expense/categories file for given year {year}."
-            }
+            {"status": f"Could not read expenses or categories for year {year}."}
         ), 500
 
-    for category_record in year_categories.get_categories():
-        if category_record.category not in expenses_monthly_totals_by_category:
-            expenses_monthly_totals_by_category[category_record.category] = (
-                YearExpensesTotals()
-            )
-
-    expenses_monthly_totals_by_category_type = _sort_monthly_expenses_by_category_types(
-        expenses_monthly_totals_by_category, year_categories
-    )
-    _, monthly_balance, _ = _calculate_yearly_expenses_stats(
-        expenses_monthly_totals_by_category_type
-    )
-
-    return jsonify({"status": "Ok", "monthly_balance": round(year_report.initial_balance + sum(monthly_balance), 2)}), 200
+    context = _prepare_context(user, report, categories, year)
+    return jsonify(
+        {"status": "Ok", "balance": round(float(context["current_balance"]), 2)}
+    ), 200
