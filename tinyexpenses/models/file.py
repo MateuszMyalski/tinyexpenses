@@ -123,6 +123,10 @@ class DbCSVWriter(AbstractContextManager):
 
     def ensure_trailing_newline(self):
         with open(self._db_file.get_path(), "rb+") as f:
+            f.seek(0, os.SEEK_END)
+            if f.tell() == 0:
+                return
+
             f.seek(-1, os.SEEK_END)
             if f.read(1) != b"\n":
                 f.write(b"\n")
