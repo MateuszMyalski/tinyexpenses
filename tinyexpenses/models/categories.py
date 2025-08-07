@@ -116,10 +116,11 @@ class YearCategories:
         db_file.erase()
 
         try:
-            with open(db_file.get_path(), mode="w", newline="") as file:
-                writer = csv.writer(file)
+            with DbCSVWriter(
+                db_file, CategoryRecord.Columns.labels(), append_mode=True
+            ) as writer:
                 for category in categories:
-                    writer.writerow(category.serialize())
+                    writer.write(category.serialize())
 
         except Exception as e:
             db_file.restore()

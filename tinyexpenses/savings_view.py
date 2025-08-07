@@ -7,7 +7,7 @@ from wtforms import (
 )
 from .models.accounts import User
 from .models.savings import Savings
-from .models.flash import FlashType, flash_collect
+from .models.flash import flash_collect
 from .extensions import users_db
 from collections import defaultdict
 

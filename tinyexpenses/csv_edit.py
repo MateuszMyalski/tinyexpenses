@@ -1,4 +1,4 @@
-from flask import render_template, get_flashed_messages, flash, redirect
+from flask import render_template, flash, redirect
 from flask_wtf import FlaskForm
 from wtforms import SubmitField, HiddenField
 from .models.flash import FlashType, flash_collect

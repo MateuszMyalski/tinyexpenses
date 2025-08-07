@@ -15,7 +15,7 @@ from .models.expenses import YearExpensesReport, ExpenseRecord
 from .models.categories import YearCategories, CategoryRecord, CategoryType
 from .extensions import users_db
 from .savings_view import SavingRecordForm
-from .models.flash import FlashType, flash_collect
+from .models.flash import FlashType
 
 from datetime import datetime
 

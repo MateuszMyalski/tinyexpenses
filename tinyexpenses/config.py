@@ -7,13 +7,16 @@ class Config:
         "ACCOUNTS_DB_DIRECTORY_PATH", "accounts"
     )
 
+
 class ProductionHTTPConfig(Config):
     DEBUG = False
     TESTING = False
 
+
 class ProductionHTTPSConfig(ProductionHTTPConfig):
     SESSION_COOKIE_SECURE = True
     REMEMBER_COOKIE_SECURE = True
+
 
 class DevelopmentConfig(Config):
     DEBUG = True

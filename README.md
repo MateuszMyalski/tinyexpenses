@@ -73,20 +73,23 @@ Yearly balances are updated automatically based on categories (Income or Expense
 
 You can add compensation/adjustments using negative amounts (e.g., -50.0).
 
-```
 ## ✅ API (Optional Use)
 You can automate expense tracking by sending JSON requests with your user’s API token.
 
 ```http
 PUT /api/v1/<username>/expenses/append
-Headers:
-  X-API-Key: your-api-key
-  Content-type: application/json
-Body:
+X-API-Key: your-api-key
+Content-type: application/json
+
 {
   "amount": 14.99,
   "title": "Dinner",
   "category": "Food",
   "date": "2025-08-02"
 }
+```
+
+```http
+GET /api/v1/{{ username }}/expenses/view/balance HTTP/1.1
+X-API-Key: (Here put your X-API key)
 ```

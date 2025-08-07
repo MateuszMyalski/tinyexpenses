@@ -54,7 +54,7 @@
         <details name="api-details">
             <summary>Append expense - example request</summary>
             <pre>
-PUT {{ host_url }}v1.0/{{ username }}/expenses/append HTTP/1.1
+PUT {{ host_url }}/api/v1/{{ username }}/expenses/append HTTP/1.1
 X-API-Key: (Here put your X-API key)
 Content-type: application/json
 
@@ -71,15 +71,9 @@ Content-type: application/json
         <details name="api-details">
             <summary>View month balance - example request</summary>
             <pre>
-GET {{ host_url }}v1.0/{{ username }}/expenses/view/balance HTTP/1.1
+GET {{ host_url }}/api/v1/{{ username }}/expenses/view/balance HTTP/1.1
 X-API-Key: (Here put your X-API key)
-Content-type: application/json
-
-{
-  "year": 2025,
-}
             </pre>
-            Field: "year" is optional
         </details>
     </div>
 

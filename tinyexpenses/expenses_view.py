@@ -1,10 +1,9 @@
-from flask import render_template, redirect, url_for, jsonify, request
+from flask import render_template, redirect, url_for, jsonify
 from flask_login import current_user
 from .models.expenses import YearExpensesReport, YearExpensesTotals
 from .models.categories import CategoryType, YearCategories
 from .extensions import users_db
 import calendar
-import json
 from datetime import datetime
 
 

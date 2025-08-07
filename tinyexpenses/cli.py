@@ -1,6 +1,5 @@
 import os
 import click
-from werkzeug.security import generate_password_hash
 
 from tinyexpenses.models.file import DbFile
 from tinyexpenses.models.accounts import ConfigCreator
@@ -14,7 +13,10 @@ def main():
 
 @main.command("init-user")
 @click.argument("users_root", type=click.Path(exists=True, file_okay=False))
-@click.option("--username", prompt=True, )
+@click.option(
+    "--username",
+    prompt=True,
+)
 @click.option("--full-name", prompt="Full name")
 @click.option("--currency", prompt=True, default="$")
 @click.option("--password", prompt=True, hide_input=True, confirmation_prompt=True)
@@ -37,7 +39,6 @@ def init_user(users_root, username, full_name, currency, password):
     config.set_currency(currency)
     config.set_password(password)
     token = config.generate_api_token()
-
 
     click.echo(f"✅ User '{username}' initialized at {config_path}")
     click.echo(f"🔑 API token: {token}")

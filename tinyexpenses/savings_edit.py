@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, flash, get_flashed_messages
+from flask import render_template, redirect, url_for, flash
 from flask_login import current_user
 from flask_wtf import FlaskForm
 from wtforms import (
@@ -12,7 +12,7 @@ from .models.accounts import User
 from .models.savings import Savings
 from .extensions import users_db
 from .savings_view import SavingRecordForm
-from .models.flash import FlashType, flash_collect
+from .models.flash import FlashType
 
 def non_negative(form, field):
     if field.data is not None and float(field.data) < 0:
