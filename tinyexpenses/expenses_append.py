@@ -20,9 +20,8 @@ from wtforms import (
 )
 
 from tinyexpenses.models.accounts import User
-from .models.categories import YearCategories, CategoryRecord, CategoryType
-from .models.expenses import YearExpensesReport, ExpenseRecord
-from .models.savings import Savings
+from .models.categories import YearCategories, CategoryType
+from .models.expenses import ExpenseRecord
 from .extensions import users_db
 from .models.flash import FlashType, flash_collect
 from datetime import datetime, date
@@ -63,8 +62,7 @@ def expenses_append_get():
         return render_template("error.html", message="User not found.")
 
     # Currently we support adding expenses only to current year
-    year_categories_file = requested_user.get_categories_file(datetime.now().year)
-    year_categories = YearCategories(year_categories_file)
+    year_categories = requested_user.get_year_categories(datetime.now().year)
 
     form = AppendExpenseForm()
     form.populate_category_choices(year_categories)
@@ -78,8 +76,7 @@ def expenses_append_get():
 
 
 def _update_savings(requested_user: User, category: str, amount: float):
-    savings_file = requested_user.get_savings_file()
-    savings = Savings(savings_file)
+    savings = requested_user.get_savings()
 
     saving_record = savings.get_by_category().get(category, None)
     if saving_record is not None:
@@ -98,9 +95,8 @@ def expenses_append_post():
         return render_template("error.html", message="User not found.")
 
     # Currently we support adding expenses only to current year
-    year_categories_file = requested_user.get_categories_file(datetime.now().year)
-    year_expenses_file = requested_user.get_expenses_report_file(datetime.now().year)
-    year_categories = YearCategories(year_categories_file)
+    year_expenses = requested_user.get_year_expenses(datetime.now().year)
+    year_categories = requested_user.get_year_categories(datetime.now().year)
 
     form = AppendExpenseForm()
     form.populate_category_choices(year_categories)
@@ -122,10 +118,11 @@ def expenses_append_post():
             description=form.description.data,
         )
 
-        YearExpensesReport.insert_expense(year_expenses_file, expense)
+        year_expenses.insert_expense(expense)
 
         if expense.category in year_categories[CategoryType.SAVINGS]:
             _update_savings(requested_user, expense.category, expense.amount)
+
     except FileNotFoundError:
         return redirect(
             url_for("main.expenses_create", year=form.expense_date.data.year)
@@ -170,10 +167,7 @@ def expenses_append_api_put(username):
         ), 501
 
     try:
-        year_categories_file = requested_user.get_categories_file(
-            expense.expense_date.year
-        )
-        year_categories = YearCategories(year_categories_file)
+        year_categories = requested_user.get_year_categories(expense.expense_date.year)
 
         available_categories = list(
             map(lambda item: item.category, year_categories.get_categories())
@@ -192,9 +186,7 @@ def expenses_append_api_put(username):
             }
         )
     try:
-        year_expenses_file = requested_user.get_expenses_report_file(
-            expense.expense_date.year
-        )
+        year_expenses = requested_user.get_year_expenses(expense.expense_date.year)
     except Exception:
         return jsonify(
             {
@@ -203,7 +195,7 @@ def expenses_append_api_put(username):
         ), 500
 
     try:
-        YearExpensesReport.insert_expense(year_expenses_file, expense)
+        year_expenses.insert_expense(expense)
 
         if expense.category in year_categories[CategoryType.SAVINGS]:
             _update_savings(requested_user, expense.category, expense.amount)

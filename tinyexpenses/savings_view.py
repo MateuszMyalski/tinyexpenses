@@ -26,7 +26,7 @@ def savings_view_get():
     if requested_user is None:
         return render_template("error.html", message="User not found.")
 
-    savings = Savings(requested_user.get_savings_file())
+    savings = requested_user.get_savings()
 
     savings_by_category_form = defaultdict(dict)
 

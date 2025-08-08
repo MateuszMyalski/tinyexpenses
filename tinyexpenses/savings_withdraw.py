@@ -10,9 +10,8 @@ from wtforms import (
     ValidationError,
 )
 from .models.accounts import User
-from .models.savings import Savings
-from .models.expenses import YearExpensesReport, ExpenseRecord
-from .models.categories import YearCategories, CategoryRecord, CategoryType
+from .models.expenses import ExpenseRecord
+from .models.categories import CategoryRecord, CategoryType
 from .extensions import users_db
 from .savings_view import SavingRecordForm
 from .models.flash import FlashType
@@ -53,7 +52,7 @@ def _handle_view_form_post(saving_record_form: SavingRecordForm):
     if requested_user is None:
         return render_template("error.html", message="User not found.")
 
-    available_years = requested_user.get_available_expenses_reports()
+    available_years = requested_user.get_available_expenses_files()
 
     if len(available_years) <= 0:
         flash("No year expenses available.", FlashType.ERROR.name)
@@ -79,7 +78,7 @@ def _handle_withdraw_post():
 
     if requested_user is None:
         return render_template("error.html", message="User not found.")
-    available_years = requested_user.get_available_expenses_reports()
+    available_years = requested_user.get_available_expenses_files()
 
     if len(available_years) <= 0:
         flash("No year expenses available.", FlashType.ERROR.name)
@@ -92,10 +91,7 @@ def _handle_withdraw_post():
         flash("Request could not be validated.", FlashType.ERROR.name)
         return redirect(url_for("main.savings_view"))
 
-    savings_file = requested_user.get_savings_file()
-    savings = Savings(savings_file)
-
-    year_expenses_file = requested_user.get_expenses_report_file(form.year_select.data)
+    savings = requested_user.get_savings()
 
     withdrawed_amount = float(form.amount.data)
 
@@ -113,10 +109,10 @@ def _handle_withdraw_post():
     savings.update(form.category.data, None, saving_record.balance)
     savings.store()
 
-    YearExpensesReport.insert_expense(year_expenses_file, saving_transfer)
+    year_expenses = requested_user.get_year_expenses(form.year_select.data)
+    year_expenses.insert_expense(saving_transfer)
 
-    year_categories_file = requested_user.get_categories_file(form.year_select.data)
-    year_categories = YearCategories(year_categories_file)
+    year_categories = requested_user.get_year_categories(form.year_select.data)
 
     new_saving_category = CategoryRecord(form.category.data, CategoryType.SAVINGS.name)
 

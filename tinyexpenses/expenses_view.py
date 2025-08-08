@@ -1,7 +1,7 @@
 from flask import render_template, redirect, url_for, jsonify
 from flask_login import current_user
-from .models.expenses import YearExpensesReport, YearExpensesTotals
-from .models.categories import CategoryType, YearCategories
+from .models.expenses import YearExpensesTotals
+from .models.categories import CategoryType
 from .extensions import users_db
 import calendar
 from datetime import datetime
@@ -17,10 +17,12 @@ def _sort_monthly_expenses_by_category_types(expenses_by_category, categories):
     return result
 
 
-def _calculate_yearly_expenses_stats(expenses_by_category_type):
+def _calculate_yearly_expenses_stats(
+    expenses_by_category_type,
+):
     year_totals = {}
     monthly_balance = YearExpensesTotals()
-    balance_per_type = {}
+    balance_per_type = {ct: YearExpensesTotals() for ct in CategoryType}
 
     for ct, categories in expenses_by_category_type.items():
         sign = 1 if ct == CategoryType.INCOME else -1
@@ -42,12 +44,12 @@ def _get_user_or_abort(user_id):
 
 def _load_year_data(user, year):
     try:
-        report = YearExpensesReport(user.get_expenses_report_file(year))
+        report = user.get_year_expenses(year)
     except FileNotFoundError:
         return None, None, redirect(url_for("main.expenses_create", year=year))
 
     try:
-        categories = YearCategories(user.get_categories_file(year))
+        categories = user.get_year_categories(year)
     except FileNotFoundError:
         return None, None, redirect(url_for("main.categories_create", year=year))
 
@@ -96,7 +98,7 @@ def expenses_view_year_get(year: int):
         monthly_balance_per_category_type=context["balance_per_type"],
         currency=context["currency"],
         title=f"{year} expenses",
-        available_years=user.get_available_expenses_reports(),
+        available_years=user.get_available_expenses_files(),
         current_balance=context["current_balance"],
         CategoryType=CategoryType,
         month_names=calendar.month_name[1:],
@@ -126,7 +128,7 @@ def expenses_view_month_get(year: int, month: int):
         monthly_balance_per_category_type=context["balance_per_type"],
         currency=context["currency"],
         title=f"{month}/{year} expenses",
-        available_years=user.get_available_expenses_reports(),
+        available_years=user.get_available_expenses_files(),
         current_balance=context["current_balance"],
         CategoryType=CategoryType,
         month_names=calendar.month_name[1:],
@@ -144,8 +146,8 @@ def expenses_view_balance_api_get(username, year):
         year = datetime.now().date().year
 
     try:
-        report = YearExpensesReport(user.get_expenses_report_file(year))
-        categories = YearCategories(user.get_categories_file(year))
+        report = user.get_year_expenses(year)
+        categories = user.get_year_categories(year)
     except Exception:
         return jsonify(
             {"status": f"Could not read expenses or categories for year {year}."}

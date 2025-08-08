@@ -18,15 +18,15 @@ def expenses_edit_post(year: int):
     if requested_user is None:
         return render_template("error.html", message="User not found.")
 
-    year_expenses_file = requested_user.get_expenses_report_file(year)
+    db_file = requested_user._get_year_expenses_file(year)
 
-    if not year_expenses_file.exists():
+    if not db_file.exists():
         return redirect(url_for("main.expenses_create", year=year))
-
+    
     return handle_csv_data_edit(
         url_for("main.expenses_edit", year=year),
         _store_expenses_data_cb,
-        {"db_file": year_expenses_file},
+        {"db_file": db_file},
     )
 
 
@@ -36,14 +36,10 @@ def expenses_edit_get(year: int):
     if requested_user is None:
         return render_template("error.html", message="User not found.")
 
-    year_expenses_file = requested_user.get_expenses_report_file(year)
-
-    if not year_expenses_file.exists():
+    try:
+        year_expenses = requested_user.get_year_expenses(year).get_expenses()
+    except FileNotFoundError:
         return redirect(url_for("main.expenses_create", year=year))
-
-    year_expenses: list[ExpenseRecord] = YearExpensesReport(
-        year_expenses_file
-    ).get_expenses()
 
     year_expenses.sort(key=lambda timestamp: timestamp.timestamp)
 

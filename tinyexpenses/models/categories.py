@@ -1,4 +1,3 @@
-import csv
 from enum import Enum
 from .file import DbFile, DbCSVReader, DbCSVWriter
 from collections import defaultdict

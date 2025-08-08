@@ -13,7 +13,7 @@ class SetInitialBalanceForm(FlaskForm):
     initial_balance_amount = FloatField(
         "Initial balance",
         [validators.InputRequired(message="Initial balance is required.")],
-        default=0.0
+        default=0.0,
     )
     submit = SubmitField("Submit")
 
@@ -33,7 +33,7 @@ def expenses_create_post(year: int):
     if requested_user is None:
         return render_template("error.html", message="User not found.")
 
-    requested_user.create_expenses_records(year, form.initial_balance_amount.data)
+    requested_user.create_year_expenses(year, form.initial_balance_amount.data)
 
     return redirect(url_for("main.expenses_view_year", year=year))
 
@@ -44,10 +44,11 @@ def expenses_create_get(year: int):
     if requested_user is None:
         return render_template("error.html", message="User not found.")
 
-    expenses_file = requested_user.get_expenses_report_file(year)
+    try:
+        requested_user.get_year_expenses(year)
+    except FileNotFoundError:
+        form = SetInitialBalanceForm()
+        return render_template("expenses_create.html", form=form, year=year)
+    
+    return redirect(url_for("main.expenses_view_year", year=year))
 
-    if expenses_file.exists():
-        return redirect(url_for("main.expenses_view_year", year=year))
-
-    form = SetInitialBalanceForm()
-    return render_template("expenses_create.html", form=form, year=year)

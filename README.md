@@ -1,6 +1,8 @@
 # TinyExpenses
 TinyExpenses is a minimal, personal finance tracker built with Flask. It supports multi-user setups, tracks expenses and income by category, and exposes a simple API for automation.
 
+![TinyExpenses dashboard](assets/image.png)
+
 ## 🚀 Getting Started
 1. Install Dependencies (inside root dir)
 

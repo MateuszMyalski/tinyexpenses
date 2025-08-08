@@ -149,7 +149,6 @@ class YearExpensesReport:
         self.initial_balance: float = 0.0
 
         self._load_expenses()
-        self._sum_expenses_by_category_per_month()
 
     def _load_expenses(self) -> None:
         if not self._db_file.exists():
@@ -168,11 +167,7 @@ class YearExpensesReport:
                     self.initial_balance = expense.amount
 
                 self._by_category[expense.category].append(expense)
-
-    def _sum_expenses_by_category_per_month(self) -> None:
-        for category, expenses in self._by_category.items():
-            for expense in expenses:
-                self._category_monthly_totals[category].totals[
+                self._category_monthly_totals[expense.category].totals[
                     expense.expense_date.month - 1
                 ] += expense.amount
 
@@ -182,28 +177,26 @@ class YearExpensesReport:
     def get_expenses(self) -> list[ExpenseRecord]:
         return sum(self._by_category.values(), [])
 
-    @staticmethod
-    def insert_expense(
-        db_file: DbFile,
-        expenses: ExpenseRecord | list[ExpenseRecord],
-    ) -> None:
+    def insert_expense(self, expenses: ExpenseRecord | list[ExpenseRecord]) -> None:
         if not isinstance(expenses, list):
             expenses = [expenses]
 
-        if not db_file.exists():
-            raise FileNotFoundError("Expenses file does not exists.")
-
-        db_file.backup()
+        self._db_file.backup()
 
         try:
             with DbCSVWriter(
-                db_file, ExpenseRecord.Columns.labels(), append_mode=True
+                self._db_file, ExpenseRecord.Columns.labels(), append_mode=True
             ) as writer:
                 for expense in expenses:
+                    self._by_category[expense.category].append(expense)
+                    self._category_monthly_totals[expense.category][
+                        expense.expense_date.month - 1
+                    ] += expense.amount
+
                     writer.write(expense.serialize())
 
         except Exception as e:
-            db_file.restore()
+            self._db_file.restore()
             raise e
 
     @staticmethod

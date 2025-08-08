@@ -18,15 +18,13 @@ def categories_edit_post(year: int):
     if requested_user is None:
         return render_template("error.html", message="User not found.")
 
-    year_categories_file = requested_user.get_categories_file(year)
-
-    if not year_categories_file.exists():
+    db_file = requested_user._get_year_categories_file(year)
+    if not db_file.exists():
         return redirect(url_for("main.categories_create", year=year))
-
     return handle_csv_data_edit(
         url_for("main.categories_edit", year=year),
         _store_categories_data_cb,
-        {"db_file": year_categories_file},
+        {"db_file": db_file},
     )
 
 
@@ -36,15 +34,11 @@ def categories_edit_get(year: int):
     if requested_user is None:
         return render_template("error.html", message="User not found.")
 
-    year_categories_file = requested_user.get_categories_file(year)
-
-    if not year_categories_file.exists():
+    try:
+        year_categories = requested_user.get_year_categories(year)
+    except FileNotFoundError:
         return redirect(url_for("main.categories_create", year=year))
 
-    year_categories: list[CategoryRecord] = YearCategories(
-        year_categories_file
-    ).get_categories()
-
     return render_csv_data_edit_form(
-        [col.label for col in CategoryRecord.Columns], year_categories
+        [col.label for col in CategoryRecord.Columns], year_categories.get_categories()
     )

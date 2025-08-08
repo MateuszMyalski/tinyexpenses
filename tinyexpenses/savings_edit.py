@@ -14,6 +14,7 @@ from .extensions import users_db
 from .savings_view import SavingRecordForm
 from .models.flash import FlashType
 
+
 def non_negative(form, field):
     if field.data is not None and float(field.data) < 0:
         raise ValidationError("Value must not be negative.")
@@ -40,7 +41,7 @@ def _handle_view_form_post(saving_record_form: SavingRecordForm):
     if requested_user is None:
         return render_template("error.html", message="User not found.")
 
-    available_years = requested_user.get_available_expenses_reports()
+    available_years = requested_user.get_available_expenses_files()
 
     if len(available_years) <= 0:
         flash("No year expenses available.", FlashType.ERROR.name)
@@ -72,8 +73,7 @@ def _handle_withdraw_post():
         flash("Request could not be validated.", FlashType.ERROR.name)
         return redirect(url_for("main.savings_view"))
 
-    savings_file = requested_user.get_savings_file()
-    savings = Savings(savings_file)
+    savings = requested_user.get_savings()
 
     savings.update(form.category.data, form.account.data, form.balance.data)
 

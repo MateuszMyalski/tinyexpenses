@@ -25,23 +25,23 @@ def categories_create_get(year: int):
     if requested_user is None:
         return render_template("error.html", message="User not found.")
 
-    categories_file = requested_user.get_categories_file(year)
+    try:
+        requested_user.get_year_categories(year)
+    except FileNotFoundError:
+        available_years = [
+            *requested_user.get_available_categories_files(),
+            int(year),
+        ]
+        available_years.sort(reverse=True)
 
-    if categories_file.exists():
-        return redirect(url_for("main.categories_create", year=year))
+        form = CreateCategoryFileForm()
+        form.populate_template_year_choices(available_years)
+        form.template_year.label.text += f" (empty {year})"
+        form.template_year.data = str(year)
 
-    available_years = [
-        *requested_user.get_available_categories_files(),
-        int(year),
-    ]
-    available_years.sort(reverse=True)
+        return render_template("categories_create.html", form=form, year=year)
 
-    form = CreateCategoryFileForm()
-    form.populate_template_year_choices(available_years)
-    form.template_year.label.text += f" (empty {year})"
-    form.template_year.data = str(year)
-
-    return render_template("categories_create.html", form=form, year=year)
+    return redirect(url_for("main.categories_create", year=year))
 
 
 def categories_create_post(year: int):
@@ -68,8 +68,8 @@ def categories_create_post(year: int):
         )
 
     if form.template_year.data != year:
-        requested_user.create_categories_file(year, form.template_year.data)
+        requested_user.create_year_categories_file(year, form.template_year.data)
     else:
-        requested_user.create_categories_file(year)
+        requested_user.create_year_categories_file(year)
 
     return redirect(url_for("main.expenses_view_year", year=year))

@@ -7,7 +7,8 @@ import tomli_w
 from datetime import datetime
 from .file import DbFile
 from .expenses import ExpenseRecord, YearExpensesReport
-from .categories import CategoryType
+from .savings import Savings
+from .categories import CategoryType, YearCategories
 from werkzeug.security import check_password_hash, generate_password_hash
 
 
@@ -151,7 +152,7 @@ class User(flask_login.UserMixin):
     def get_token(self, token):
         return self.config.get_token()
 
-    def get_available_expenses_reports(self) -> list[int]:
+    def get_available_expenses_files(self) -> list[int]:
         if not os.path.exists(self.user_directory):
             return []
 
@@ -159,7 +160,7 @@ class User(flask_login.UserMixin):
 
         for entry in os.scandir(self.user_directory):
             if entry.is_dir() and entry.name.isdigit():
-                if self.get_expenses_report_file(entry.name).exists():
+                if self._get_year_expenses_file(entry.name).exists():
                     available_years.append(int(entry.name))
 
         return sorted(available_years)
@@ -172,27 +173,33 @@ class User(flask_login.UserMixin):
 
         for entry in os.scandir(self.user_directory):
             if entry.is_dir() and entry.name.isdigit():
-                if self.get_categories_file(entry.name).exists():
+                if self._get_year_categories_file(entry.name).exists():
                     available_years.append(int(entry.name))
 
         return sorted(available_years)
 
-    def get_expenses_report_file(self, year: str | int) -> DbFile:
+    def _get_year_expenses_file(self, year: str | int) -> DbFile:
         return DbFile(
             os.path.join(self.user_directory, str(year), self.EXPENSES_FILE_NAME)
         )
 
-    def get_categories_file(self, year: str | int) -> DbFile:
+    def get_year_expenses(self, year: str | int) -> YearExpensesReport:
+        return YearExpensesReport(self._get_year_expenses_file(year))
+
+    def _get_year_categories_file(self, year: str | int) -> DbFile:
         return DbFile(
             os.path.join(self.user_directory, str(year), self.CATEGORIES_FILE_NAME)
         )
-    
-    def get_savings_file(self) -> DbFile:
-        return DbFile(
-            os.path.join(self.user_directory, self.SAVINGS_FILE_NAME)
-        )
 
-    def create_categories_file(
+    def get_year_categories(self, year: str | int) -> YearCategories:
+        return YearCategories(self._get_year_categories_file(year))
+
+    def get_savings(self) -> Savings:
+        db_file = DbFile(os.path.join(self.user_directory, self.SAVINGS_FILE_NAME))
+
+        return Savings(db_file)
+
+    def create_year_categories_file(
         self, year: str | int, template_year: str | int | None = None
     ) -> None:
         try:
@@ -201,19 +208,15 @@ class User(flask_login.UserMixin):
         except Exception as e:
             raise NameError(f"Year number looks odd : {e}")
 
-        categories_file_path = os.path.join(
-            self.user_directory, str(escaped_year), self.CATEGORIES_FILE_NAME
-        )
-
-        categories_file = DbFile(categories_file_path)
+        categories_file = self._get_year_categories_file(escaped_year)
 
         if template_year is None:
             categories_file.create()
         else:
-            template_file = self.get_categories_file(int(template_year))
+            template_file = self._get_year_categories_file(template_year)
             categories_file.copy_from(template_file.get_path())
 
-    def create_expenses_records(self, year: str | int, initial_balance: float) -> None:
+    def create_year_expenses(self, year: str | int, initial_balance: float) -> None:
         try:
             escaped_year = int(year)
 
@@ -227,14 +230,11 @@ class User(flask_login.UserMixin):
         except Exception as e:
             raise NameError(f"Year number looks odd : {e}")
 
-        file_path = os.path.join(
-            self.user_directory, str(escaped_year), self.EXPENSES_FILE_NAME
-        )
-
-        expenses_file = DbFile(file_path)
+        expenses_file = self._get_year_expenses_file(escaped_year)
         expenses_file.create()
 
-        YearExpensesReport.insert_expense(expenses_file, initial_balance_entry)
+        year_expenses = self.get_year_expenses(escaped_year)
+        year_expenses.insert_expense(initial_balance_entry)
 
 
 class Users:
