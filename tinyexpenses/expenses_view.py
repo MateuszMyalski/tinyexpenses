@@ -23,6 +23,7 @@ def _calculate_yearly_expenses_stats(
     year_totals = {}
     monthly_balance = YearExpensesTotals()
     balance_per_type = {ct: YearExpensesTotals() for ct in CategoryType}
+    balance_per_type.pop(CategoryType.INITIAL_BALANCE_LABEL)
 
     for ct, categories in expenses_by_category_type.items():
         sign = 1 if ct == CategoryType.INCOME else -1
