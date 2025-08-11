@@ -149,7 +149,7 @@ class User(flask_login.UserMixin):
     def set_token(self):
         return self.config.set_token()
 
-    def get_token(self, token):
+    def get_token(self):
         return self.config.get_token()
 
     def get_available_expenses_files(self) -> list[int]:
