@@ -51,21 +51,6 @@ class ChangePasswordForm(FlaskForm):
     )
     submit = SubmitField("Change password")
 
-
-def flash_collect():
-    infos = [
-        ("info", msg)
-        for msg in get_flashed_messages(False, FlashType.INFO.name)
-    ]
-
-    errors = [
-        ("error", msg)
-        for msg in get_flashed_messages(False, FlashType.ERROR.name)
-    ]
-
-    return [*infos, *errors]
-
-
 def _handle_details_change(user: User, form: UserDetailsForm) -> None:
     if not form.validate_on_submit():
         flash("Request could not be validated.", FlashType.ERROR.name)
