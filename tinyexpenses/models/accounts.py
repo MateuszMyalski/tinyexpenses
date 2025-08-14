@@ -19,6 +19,11 @@ class Config:
         self._db_file = db_file
         self._data = self._load()
 
+        if self._data.get("tinyexpenses", None) is None:
+            self._data["tinyexpenses"] = {"currency": ""}
+
+            self._save()
+
     def _load(self) -> dict:
         if not self._db_file.exists():
             raise FileNotFoundError(f"Missing config: {self._db_file.get_path()}")
@@ -40,10 +45,10 @@ class Config:
         self._save()
 
     def get_currency(self) -> str:
-        return self._data["user"].get("currency", "")
+        return self._data["tinyexpenses"].get("currency", "")
 
     def set_currency(self, currency: str) -> None:
-        self._data["user"]["currency"] = currency
+        self._data["tinyexpenses"]["currency"] = currency
         self._save()
 
     def get_password_hash(self) -> str:
@@ -62,13 +67,13 @@ class Config:
         return True
 
     def set_token(self):
-        self._data["user"]["api_token"] = secrets.token_urlsafe(32)
+        self._data["tinyexpenses"]["api_token"] = secrets.token_urlsafe(32)
         self._save()
 
         return self.get_token()
 
     def get_token(self):
-        return self._data["user"].get("api_token", None)
+        return self._data["tinyexpenses"].get("api_token", None)
 
 
 class ConfigCreator(Config):
@@ -82,9 +87,11 @@ class ConfigCreator(Config):
                 "full_name": "",
                 "active": True,
                 "password_hash": "",
+            },
+            "tinyexpenses": {
                 "currency": "",
                 "api_token": "",
-            }
+            },
         }
 
         # Do not overwrite config that already exists
@@ -104,7 +111,7 @@ class ConfigCreator(Config):
 
     def generate_api_token(self) -> str:
         token = secrets.token_urlsafe(32)
-        self._data["user"]["api_token"] = token
+        self._data["tinyexpenses"]["api_token"] = token
         self._save()
         return token
 
@@ -113,52 +120,58 @@ class User(flask_login.UserMixin):
     EXPENSES_FILE_NAME = "expenses.csv"
     CATEGORIES_FILE_NAME = "categories.csv"
     SAVINGS_FILE_NAME = "savings.csv"
+    APP_DIRECTORY = "tinyexpenses"
 
     def __init__(self, id, config: Config):
         self.id = id
-        self.config = config
-        self.user_directory = ""  # Set later in Users.load()
+        self._config = config
+        self._user_directory = ""
+        self._app_path = ""
+
+    def set_user_directory(self, directory):
+        self._user_directory = directory
+        self._app_path = os.path.join(self._user_directory, self.APP_DIRECTORY)
 
     @property
     def username(self):
-        return self.config.get_username()
+        return self._config.get_username()
 
     @property
     def full_name(self):
-        return self.config.get_full_name()
+        return self._config.get_full_name()
 
     @property
     def currency(self):
-        return self.config.get_currency()
+        return self._config.get_currency()
 
     def check_password(self, password: str) -> bool:
-        return self.config.check_password(password)
+        return self._config.check_password(password)
 
     def set_password(self, current: str, new: str) -> bool:
-        return self.config.change_password(current, new)
+        return self._config.change_password(current, new)
 
     def set_full_name(self, name: str):
-        self.config.set_full_name(name)
+        self._config.set_full_name(name)
 
     def set_currency(self, currency: str):
-        self.config.set_currency(currency)
+        self._config.set_currency(currency)
 
     def get_id(self):
         return self.id
 
     def set_token(self):
-        return self.config.set_token()
+        return self._config.set_token()
 
     def get_token(self):
-        return self.config.get_token()
+        return self._config.get_token()
 
     def get_available_expenses_files(self) -> list[int]:
-        if not os.path.exists(self.user_directory):
+        if not os.path.exists(self._app_path):
             return []
 
         available_years = []
 
-        for entry in os.scandir(self.user_directory):
+        for entry in os.scandir(self._app_path):
             if entry.is_dir() and entry.name.isdigit():
                 if self._get_year_expenses_file(entry.name).exists():
                     available_years.append(int(entry.name))
@@ -166,12 +179,12 @@ class User(flask_login.UserMixin):
         return sorted(available_years)
 
     def get_available_categories_files(self) -> list[int]:
-        if not os.path.exists(self.user_directory):
+        if not os.path.exists(self._app_path):
             return []
 
         available_years = []
 
-        for entry in os.scandir(self.user_directory):
+        for entry in os.scandir(self._app_path):
             if entry.is_dir() and entry.name.isdigit():
                 if self._get_year_categories_file(entry.name).exists():
                     available_years.append(int(entry.name))
@@ -180,7 +193,11 @@ class User(flask_login.UserMixin):
 
     def _get_year_expenses_file(self, year: str | int) -> DbFile:
         return DbFile(
-            os.path.join(self.user_directory, str(year), self.EXPENSES_FILE_NAME)
+            os.path.join(
+                self._app_path,
+                str(year),
+                self.EXPENSES_FILE_NAME,
+            )
         )
 
     def get_year_expenses(self, year: str | int) -> YearExpensesReport:
@@ -188,14 +205,18 @@ class User(flask_login.UserMixin):
 
     def _get_year_categories_file(self, year: str | int) -> DbFile:
         return DbFile(
-            os.path.join(self.user_directory, str(year), self.CATEGORIES_FILE_NAME)
+            os.path.join(
+                self._app_path,
+                str(year),
+                self.CATEGORIES_FILE_NAME,
+            )
         )
 
     def get_year_categories(self, year: str | int) -> YearCategories:
         return YearCategories(self._get_year_categories_file(year))
 
     def get_savings(self) -> Savings:
-        db_file = DbFile(os.path.join(self.user_directory, self.SAVINGS_FILE_NAME))
+        db_file = DbFile(os.path.join(self._app_path, self.SAVINGS_FILE_NAME))
 
         return Savings(db_file)
 
@@ -256,7 +277,7 @@ class Users:
                     continue
 
                 self._users_db[user.id] = user
-                user.user_directory = os.path.join(db_path, entry.name)
+                user.set_user_directory(os.path.join(db_path, entry.name))
 
     def _load_user(self, db_file: DbFile) -> User | None:
         if not db_file.exists():
