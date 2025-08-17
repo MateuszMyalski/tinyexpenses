@@ -1,4 +1,4 @@
-from .models.accounts import User
+from .models.accounts import AppUser
 from .django_http import url_has_allowed_host_and_scheme
 from flask import abort, render_template, request, redirect, url_for
 from flask_wtf import FlaskForm
@@ -25,7 +25,7 @@ def auth_display_login_form():
 
 def auth_authenticate_post():
     form = LoginForm()
-    user: User | None = users_db.get(form.username.data)
+    user: AppUser | None = users_db.get(form.username.data)
 
     if not form.validate_on_submit():
         return render_template("login.html", form=form, infos=[("error","Not validated")])

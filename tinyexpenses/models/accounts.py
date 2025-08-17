@@ -1,163 +1,60 @@
 import os
-import flask_login
 import secrets
 import dateutil
-import tomllib
-import tomli_w
 from datetime import datetime
 from .file import DbFile
+from .user import Config, User
 from .expenses import ExpenseRecord, YearExpensesReport
 from .savings import Savings
 from .categories import CategoryType, YearCategories
-from werkzeug.security import check_password_hash, generate_password_hash
 
 
-class Config:
-    CONFIG_FILE_NAME = "config.toml"
-
-    def __init__(self, db_file: DbFile) -> None:
-        self._db_file = db_file
-        self._data = self._load()
+class TinyExpensesConfig(Config):
+    def __init__(self, directory):
+        super().__init__(directory)
 
         if self._data.get("tinyexpenses", None) is None:
-            self._data["tinyexpenses"] = {"currency": ""}
-
+            self._data["tinyexpenses"] = {
+                "currency": "",
+                "api_token": "",
+            }
             self._save()
 
-    def _load(self) -> dict:
-        if not self._db_file.exists():
-            raise FileNotFoundError(f"Missing config: {self._db_file.get_path()}")
-        with open(self._db_file.get_path(), "rb") as f:
-            return tomllib.load(f)
-
-    def _save(self) -> None:
-        with open(self._db_file.get_path(), "wb") as f:
-            tomli_w.dump(self._data, f)
-
-    def get_username(self) -> str:
-        return self._data["user"]["username"]
-
-    def get_full_name(self) -> str:
-        return self._data["user"].get("full_name", "")
-
-    def set_full_name(self, full_name: str) -> None:
-        self._data["user"]["full_name"] = full_name
-        self._save()
+        self._app_config = self._data["tinyexpenses"]
 
     def get_currency(self) -> str:
-        return self._data["tinyexpenses"].get("currency", "")
+        return self._app_config.get("currency", "")
 
     def set_currency(self, currency: str) -> None:
-        self._data["tinyexpenses"]["currency"] = currency
+        self._app_config["currency"] = currency
         self._save()
-
-    def get_password_hash(self) -> str:
-        return self._data["user"]["password_hash"]
-
-    def check_password(self, password: str) -> bool:
-        return check_password_hash(self.get_password_hash(), password)
-
-    def change_password(self, current_password: str, new_password: str) -> bool:
-        if not self.check_password(current_password):
-            return False
-
-        self._data["user"]["password_hash"] = generate_password_hash(new_password)
-        self._save()
-
-        return True
 
     def set_token(self):
-        self._data["tinyexpenses"]["api_token"] = secrets.token_urlsafe(32)
+        self._app_config["api_token"] = secrets.token_urlsafe(32)
         self._save()
-
         return self.get_token()
 
     def get_token(self):
         return self._data["tinyexpenses"].get("api_token", None)
 
 
-class ConfigCreator(Config):
-    def __init__(self, db_file: DbFile):
-        if not os.path.exists(db_file._dir):
-            raise FileNotFoundError(f"Provided dir does not exist: {db_file._dir}")
-
-        self._data = {
-            "user": {
-                "username": "",
-                "full_name": "",
-                "active": True,
-                "password_hash": "",
-            },
-            "tinyexpenses": {
-                "currency": "",
-                "api_token": "",
-            },
-        }
-
-        # Do not overwrite config that already exists
-        if not db_file.exists():
-            with open(db_file.get_path(), "wb") as f:
-                tomli_w.dump(self._data, f)
-
-        super().__init__(db_file)
-
-    def set_username(self, username: str):
-        self._data["user"]["username"] = username
-        self._save()
-
-    def set_password(self, password: str):
-        self._data["user"]["password_hash"] = generate_password_hash(password)
-        self._save()
-
-    def generate_api_token(self) -> str:
-        token = secrets.token_urlsafe(32)
-        self._data["tinyexpenses"]["api_token"] = token
-        self._save()
-        return token
-
-
-class User(flask_login.UserMixin):
+class AppUser(User):
     EXPENSES_FILE_NAME = "expenses.csv"
     CATEGORIES_FILE_NAME = "categories.csv"
     SAVINGS_FILE_NAME = "savings.csv"
     APP_DIRECTORY = "tinyexpenses"
 
-    def __init__(self, id, config: Config):
-        self.id = id
-        self._config = config
-        self._user_directory = ""
-        self._app_path = ""
+    def __init__(self, id, user_directory):
+        super().__init__(id, TinyExpensesConfig(user_directory))
 
-    def set_user_directory(self, directory):
-        self._user_directory = directory
-        self._app_path = os.path.join(self._user_directory, self.APP_DIRECTORY)
-
-    @property
-    def username(self):
-        return self._config.get_username()
-
-    @property
-    def full_name(self):
-        return self._config.get_full_name()
+        self._app_path = os.path.join(user_directory, self.APP_DIRECTORY)
 
     @property
     def currency(self):
         return self._config.get_currency()
 
-    def check_password(self, password: str) -> bool:
-        return self._config.check_password(password)
-
-    def set_password(self, current: str, new: str) -> bool:
-        return self._config.change_password(current, new)
-
-    def set_full_name(self, name: str):
-        self._config.set_full_name(name)
-
     def set_currency(self, currency: str):
         self._config.set_currency(currency)
-
-    def get_id(self):
-        return self.id
 
     def set_token(self):
         return self._config.set_token()
@@ -268,25 +165,13 @@ class Users:
 
         with os.scandir(db_path) as entries:
             for entry in entries:
-                user_cfg_file = DbFile(
-                    os.path.join(db_path, entry.name, Config.CONFIG_FILE_NAME)
-                )
-
-                user = self._load_user(user_cfg_file)
-                if user is None:
+                user_directory = os.path.join(db_path, entry.name)
+                if not Config.config_file_exists(user_directory):
                     continue
 
+                user = AppUser(id=entry.name, user_directory=user_directory)
+
                 self._users_db[user.id] = user
-                user.set_user_directory(os.path.join(db_path, entry.name))
 
-    def _load_user(self, db_file: DbFile) -> User | None:
-        if not db_file.exists():
-            return None
-
-        config = Config(db_file)
-        user = User(id=config.get_username(), config=config)
-
-        return user
-
-    def get(self, username) -> User | None:
+    def get(self, username) -> AppUser | None:
         return self._users_db.get(username, None)

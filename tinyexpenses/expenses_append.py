@@ -19,7 +19,7 @@ from wtforms import (
     ValidationError,
 )
 
-from tinyexpenses.models.accounts import User
+from tinyexpenses.models.accounts import AppUser
 from .models.categories import YearCategories, CategoryType
 from .models.expenses import ExpenseRecord
 from .extensions import users_db
@@ -75,7 +75,7 @@ def expenses_append_get():
     )
 
 
-def _update_savings(requested_user: User, category: str, amount: float):
+def _update_savings(requested_user: AppUser, category: str, amount: float):
     savings = requested_user.get_savings()
 
     saving_record = savings.get_by_category().get(category, None)
@@ -89,7 +89,7 @@ def _update_savings(requested_user: User, category: str, amount: float):
 
 
 def expenses_append_post():
-    requested_user: User | None = users_db.get(current_user.id)
+    requested_user: AppUser | None = users_db.get(current_user.id)
 
     if requested_user is None:
         return render_template("error.html", message="User not found.")

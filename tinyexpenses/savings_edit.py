@@ -8,7 +8,7 @@ from wtforms import (
     validators,
     ValidationError,
 )
-from .models.accounts import User
+from .models.accounts import AppUser
 from .models.savings import Savings
 from .extensions import users_db
 from .savings_view import SavingRecordForm
@@ -36,7 +36,7 @@ class SavingsEditForm(FlaskForm):
 
 
 def _handle_view_form_post(saving_record_form: SavingRecordForm):
-    requested_user: User | None = users_db.get(current_user.id)
+    requested_user: AppUser | None = users_db.get(current_user.id)
 
     if requested_user is None:
         return render_template("error.html", message="User not found.")
@@ -62,7 +62,7 @@ def _handle_view_form_post(saving_record_form: SavingRecordForm):
 
 
 def _handle_withdraw_post():
-    requested_user: User | None = users_db.get(current_user.id)
+    requested_user: AppUser | None = users_db.get(current_user.id)
 
     if requested_user is None:
         return render_template("error.html", message="User not found.")

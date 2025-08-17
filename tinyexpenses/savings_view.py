@@ -5,7 +5,7 @@ from wtforms import (
     HiddenField,
     SubmitField,
 )
-from .models.accounts import User
+from .models.accounts import AppUser
 from .models.savings import Savings
 from .models.flash import flash_collect
 from .extensions import users_db
@@ -21,7 +21,7 @@ class SavingRecordForm(FlaskForm):
 
 
 def savings_view_get():
-    requested_user: User | None = users_db.get(current_user.id)
+    requested_user: AppUser | None = users_db.get(current_user.id)
 
     if requested_user is None:
         return render_template("error.html", message="User not found.")

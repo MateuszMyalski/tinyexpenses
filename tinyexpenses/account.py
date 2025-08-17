@@ -3,7 +3,7 @@ from flask_login import current_user
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms import validators
-from .models.accounts import User
+from .models.accounts import AppUser
 from .models.flash import FlashType, flash_collect
 from .extensions import users_db
 from .token import generate_user_token
@@ -51,7 +51,7 @@ class ChangePasswordForm(FlaskForm):
     )
     submit = SubmitField("Change password")
 
-def _handle_details_change(user: User, form: UserDetailsForm) -> None:
+def _handle_details_change(user: AppUser, form: UserDetailsForm) -> None:
     if not form.validate_on_submit():
         flash("Request could not be validated.", FlashType.ERROR.name)
 
@@ -61,7 +61,7 @@ def _handle_details_change(user: User, form: UserDetailsForm) -> None:
     flash("Details changed.", FlashType.INFO.name)
 
 
-def _handle_token_generation(user: User, form: XApiKeyGenerateForm) -> None:
+def _handle_token_generation(user: AppUser, form: XApiKeyGenerateForm) -> None:
     if not form.validate_on_submit():
         flash("Request could not be validated.", FlashType.ERROR.name)
 
@@ -74,11 +74,11 @@ def _handle_token_generation(user: User, form: XApiKeyGenerateForm) -> None:
     flash("Token generated.", FlashType.INFO.name)
 
 
-def _handle_password_change(user: User, form: ChangePasswordForm) -> None:
+def _handle_password_change(user: AppUser, form: ChangePasswordForm) -> None:
     if not form.validate_on_submit():
         flash("Request could not be validated.", FlashType.ERROR.name)
 
-    success = user.set_password(
+    success = user.change_password(
         current=form.current_passw.data, new=form.new_passw.data
     )
 
@@ -89,7 +89,7 @@ def _handle_password_change(user: User, form: ChangePasswordForm) -> None:
 
 
 def account_post():
-    requested_user: User | None = users_db.get(current_user.id)
+    requested_user: AppUser | None = users_db.get(current_user.id)
 
     if requested_user is None:
         return render_template("error.html", message="User not found.")
@@ -122,7 +122,7 @@ def account_post():
 
 
 def account_get():
-    requested_user: User | None = users_db.get(current_user.id)
+    requested_user: AppUser | None = users_db.get(current_user.id)
 
     if requested_user is None:
         return render_template("error.html", message="User not found.")

@@ -1,6 +1,6 @@
 from flask import render_template, redirect, url_for
 from flask_login import current_user
-from .models.accounts import User
+from .models.accounts import AppUser
 from .extensions import users_db
 from .models.expenses import YearExpensesReport, ExpenseRecord
 from .csv_edit import render_csv_data_edit_form, handle_csv_data_edit
@@ -31,7 +31,7 @@ def expenses_edit_post(year: int):
 
 
 def expenses_edit_get(year: int):
-    requested_user: User | None = users_db.get(current_user.id)
+    requested_user: AppUser | None = users_db.get(current_user.id)
 
     if requested_user is None:
         return render_template("error.html", message="User not found.")
