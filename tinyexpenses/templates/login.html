@@ -9,6 +9,9 @@
     {{ form.username.label }}{{ form.username() }}
 
     {{ form.password.label }}{{ form.password() }}
+    <label class="remember-me-label">
+      {{ form.remember.label.text }}{{ form.remember() }}
+    </label>
 
     {{ form.submit() }}
   </form>

@@ -3,13 +3,14 @@ from .django_http import url_has_allowed_host_and_scheme
 from flask import abort, render_template, request, redirect, url_for
 from flask_wtf import FlaskForm
 from flask_login import login_user, logout_user
-from wtforms import StringField, PasswordField, SubmitField, validators
+from wtforms import StringField, PasswordField, SubmitField, BooleanField, validators
 from .extensions import login_manager, users_db
 
 
 class LoginForm(FlaskForm):
     username = StringField("Username", [validators.DataRequired()])
     password = PasswordField("Password", [validators.DataRequired()])
+    remember = BooleanField('Remember Me')
     submit = SubmitField("Login")
 
 
@@ -38,7 +39,7 @@ def auth_authenticate_post():
             "login.html", form=form, infos=[("error", "Invalid username/password")]
         )
 
-    if not login_user(user):
+    if not login_user(user, remember=form.remember.data):
         return render_template(
             "login.html", form=form, infos=[("error", "User inactive")]
         )

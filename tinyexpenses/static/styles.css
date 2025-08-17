@@ -157,6 +157,17 @@ form.savings-form > label {
   text-transform: uppercase;
 }
 
+form.login-form > label.remember-me-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  margin-top: 10px;
+}
+
+form.login-form > label.remember-me-label:after {
+  content: none;
+}
+
 form.login-form > label:after,
 form.config-form > label:after,
 form.expenses-append-form > label:after,
