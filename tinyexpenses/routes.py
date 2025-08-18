@@ -112,7 +112,7 @@ def savings_view():
     return render_template("404.html")
 
 
-@bp.route("/expenses/create/<year>", methods=("GET", "POST"))
+@bp.route("/expenses/create/<int:year>", methods=("GET", "POST"))
 @handle_uncaught_exceptions
 @login_required
 def expenses_create(year: int):
@@ -144,14 +144,14 @@ def expenses_append():
 def expenses_append_api(username):
     return expenses_append_api_put(username)
 
-@bp.route("/api/v1/<username>/expenses/view/balance/<year>", methods=("GET",))
+@bp.route("/api/v1/<username>/expenses/view/balance/<int:year>", methods=("GET",))
 @api_key_required
 @csrf.exempt
 def expenses_view_balance_api(username, year):
     return expenses_view_balance_api_get(username, year)
 
 
-@bp.route("/expenses/edit/<year>", methods=("GET", "POST"))
+@bp.route("/expenses/edit/<int:year>", methods=("GET", "POST"))
 @handle_uncaught_exceptions
 @login_required
 def expenses_edit(year: int):
@@ -164,7 +164,7 @@ def expenses_edit(year: int):
     return render_template("404.html")
 
 
-@bp.route("/expenses/view/<year>/<month>", methods=("GET", "POST"))
+@bp.route("/expenses/view/<int:year>/<int:month>", methods=("GET", "POST"))
 @handle_uncaught_exceptions
 @login_required
 def expenses_view_month(year: int, month: int):
@@ -172,7 +172,7 @@ def expenses_view_month(year: int, month: int):
 
 
 @bp.route("/expenses/view/", defaults={"year": None}, methods=["GET", "POST"])
-@bp.route("/expenses/view/<year>", methods=("GET", "POST"))
+@bp.route("/expenses/view/<int:year>", methods=("GET", "POST"))
 @handle_uncaught_exceptions
 @login_required
 def expenses_view_year(year: int | None):
@@ -182,7 +182,7 @@ def expenses_view_year(year: int | None):
     return expenses_view_year_get(int(year))
 
 
-@bp.route("/categories/edit/<year>", methods=("GET", "POST"))
+@bp.route("/categories/edit/<int:year>", methods=("GET", "POST"))
 @handle_uncaught_exceptions
 @login_required
 def categories_edit(year: int):
@@ -195,7 +195,7 @@ def categories_edit(year: int):
     return render_template("404.html")
 
 
-@bp.route("/categories/create/<year>", methods=("GET", "POST"))
+@bp.route("/categories/create/<int:year>", methods=("GET", "POST"))
 @handle_uncaught_exceptions
 @login_required
 def categories_create(year):
