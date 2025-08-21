@@ -52,14 +52,12 @@ You will be prompted to enter:
 
 - Username
 - Full name
-- Currency (e.g., $, €, PLN)
 - Password (with confirmation)
 
 Example output:
 
 ```bash
 ✅ User 'alice' initialized at accounts/alice/config.toml
-🔑 API token: dGhpcy1pcy1hLXRva2Vu
 ```
 
 Reset a User’s Password
