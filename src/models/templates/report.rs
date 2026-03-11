@@ -76,6 +76,6 @@ pub struct AppendForm {
 pub struct AppendApi {
     pub subcategory: String,
     pub date: NaiveDate,
-    pub value: f32,
+    pub value: String,
     pub description: Option<String>,
 }

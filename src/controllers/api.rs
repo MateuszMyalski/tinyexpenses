@@ -32,7 +32,7 @@ pub mod put {
             .with_date(&payload.date)
             .with_curr_timestamp()
             .with_description(&payload.description.unwrap_or_default())
-            .with_value(payload.value)
+            .with_value(payload.value.trim().replace(',', ".").parse().unwrap_or_default())
             .with_subcategory(&payload.subcategory);
 
         if let Err(err) = report.append(&report_entry) {
