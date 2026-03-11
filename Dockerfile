@@ -20,7 +20,7 @@ FROM debian:bullseye-slim
 
 WORKDIR /app
 
-COPY templates/static ./templates/static
+COPY static ./static
 
 COPY --from=builder /app/target/release/tinyexpenses .
 
