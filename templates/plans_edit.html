@@ -1,0 +1,74 @@
+{% extends "frame.html" %}
+
+{% block head %}
+    <script src="/static/csv_editor.js" defer></script>
+{% endblock %}
+
+{% block header %}
+    {% include "nav_open.html" %}
+    <ul>
+        <li>
+            <details class="dropdown">
+                <summary>{{ picker.selected() }}</summary>
+                <ul>
+                    {% for (value, label) in picker.options() %}
+                    <li><a href="{{ value }}">{{ label }}</a></li>
+                    {% endfor %}
+                </ul>
+            </details>
+        </li>
+    </ul>
+    {% include "nav_close.html" %}
+{% endblock %}
+
+{% block content %}
+<section class="container centered">
+    <hgroup>
+    <h1>Budget plans edit</h1>
+    <p style="text-align: right;"><a onclick="window.scrollTo(0, document.body.scrollHeight);">Jump to bottom</a></p>
+    </hgroup>
+</section>
+
+<div class="overflow-auto">
+    <table class="striped" id="csv-view"
+           data-csv-table
+           data-form="csv-form"
+           data-container="[name=csv_content]">
+        <thead>
+            <tr>
+                <th></th>
+                <th class="data-col editable">Subcategory</th>
+                {% for month_label in months_labels.iter() %}
+                <th class="data-col editable" data-default="0.0" data-marker="values">{{ month_label }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in entries.iter() %}
+                <tr>
+                    <td contenteditable="true" class="data">{{ entry.subcategory.get() }}</td>
+                    {% for value in entry.values.iter() %}
+                    <td contenteditable="true" class="data" data-marker="values">{{ value.get() | fmt("{:.2}") }}</td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</div>
+
+<div role="group" data-csv-controls="csv-view">
+    <button data-action="add-row" class="secondary outline">+ Add row</button>
+    <button data-action="submit">Submit</button>
+</div>
+
+<form id="csv-form" method="POST" hidden>
+    <input type="hidden" name="csv_content" value="" />
+    <input type="hidden" name="csrf_token" value="{{ ctx.csrf_token() }}" />
+</form>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => CsvTable.init());
+</script>
+
+{% endblock %}

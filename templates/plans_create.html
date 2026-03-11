@@ -1,0 +1,38 @@
+{% extends "frame.html" %}
+
+{% block header %}
+    {% include "nav_open.html" %}
+    {% include "nav_close.html" %}
+{% endblock %}
+
+{% block content %}
+<section class="container centered">
+    <hgroup>
+        <h1>We are still missing something...</h1>
+        <p>Seems like budget plans file for year <b>{{ requested_year }}</b> <u>does not</u> exists.</p>
+
+        <p>You can create empty one, or select from which year the file should be copied.</p>
+
+        <p><i>You can always change it using <a href="/plans/edit/{{ requested_year }}">"Edit budget plan"</a></i></p>
+    </hgroup>
+
+    <div class="grid">
+        <div>
+            <form method="POST" class="create-form middle">
+                <input type="hidden" name="csrf_token" value="{{ ctx.csrf_token() }}">
+                <label for="template_year">Template year</label>
+
+                <select name="template_year" id="template_year">
+                    <option value="{{ requested_year }}" selected>Empty</option>
+
+                    {% for (value, label) in picker.options() %}
+                    <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <input id="submit" name="submit" type="submit" value="Submit">
+            </form>
+        </div>
+        <div></div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "frame.html" %}
+
+{% block header %}
+    {% include "nav_open.html" %}
+    {% include "nav_close.html" %}
+{% endblock %}
+
+{% block content %}
+<section class="container centered">
+    <h1>Savings</h1>
+    {% if tables.is_empty() %}
+    <hgroup>
+        <h2>Looks empty...</h2>
+        <p>No savings have been registered yet.</p>
+        <p>To start collecting money, add an expense categorized as a "<b>Savings</b>".</p>
+    </hgroup>
+    {% endif %}
+
+{% for savings_account in tables.iter() %}
+
+    <div class="savings-account-card">
+        <div class="header grid">
+            <div class="name">{{ savings_account.name() }}</div>
+            <div class="total">{{ savings_account.total() }} {{ ctx.account().currency() }}</div>
+        </div>
+        {% for (label, balance, balance_prcnt) in savings_account.elements() %}
+        <form method="GET" class="savings-actions-form">
+            <div class="element grid">
+                <input name="subcategory" type="hidden" value="{{ label }}">
+                <input name="account" type="hidden" value="{{ savings_account.name() }}">
+                <input name="balance" type="hidden" value="{{ balance }}">
+                <div class="name"><button formaction="/savings/edit" type="submit" data-tooltip="Edit">{{ label }}</button></div>
+                <div class="balance">{{ balance }} {{ ctx.account().currency() }}</div>
+                <div class="balance-prcnt">{{ balance_prcnt }} %
+                    <button formaction="/savings/withdraw" data-tooltip="Withdraw" type="submit">⤵️</button>
+                </div>
+            </div>
+        </form>
+        {% endfor %}
+    </div>
+
+{% endfor %}
+</section>
+
+
+{% endblock %}

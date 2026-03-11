@@ -1,0 +1,9 @@
+[user]
+full_name = "Demo Account"
+username = "demo"
+password_hash = ""
+active = true
+
+[tinyexpenses]
+currency = "USD"
+api_token = "PvHVKkaXJjVL0LFK3MI8xxnkcVSUukDEETPPy_QkjJA"

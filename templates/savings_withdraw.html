@@ -1,0 +1,43 @@
+{% extends "frame.html" %}
+
+{% block header %}
+    {% include "nav_open.html" %}
+    {% include "nav_close.html" %}
+{% endblock %}
+
+{% block content %}
+<section class="container centered">
+    <hgroup>
+        <h1>Withdraw from saving</h1>
+        <h2>{{ subcategory }}</h2>
+        <p>Balance: {{ balance | fmt("{:.2}") }} {{ ctx.account().currency() }}</p>
+    </hgroup>
+
+    <div class="grid">
+        <div>
+            <form method="POST" class="savings-form">
+                <input id="subcategory" name="subcategory" type="hidden" value="{{ subcategory }}">
+                <input id="account" name="account" type="hidden" value="{{ account }}">
+                <input id="balance" name="balance" type="hidden" value="{{ balance }}">
+
+                <input type="hidden" name="csrf_token" value="{{ ctx.csrf_token() }}">
+                <label for="amount">Amount to withdraw</label>
+                <input id="amount" name="amount" required type="number" step="0.01" min="0.0" max="{{ balance }}" value="0.0">
+
+                <label for="to_year">Withdraw to year</label>
+                <select id="to_year" name="to_year" required>
+                    {% for (value, label) in picker.options() %}
+                    <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+
+                <br />
+                <input id="submit" name="submit" type="submit" value="Submit">
+            </form>
+        </div>
+        <div></div>
+    </div>
+
+</section>
+
+{% endblock %}

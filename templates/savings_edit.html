@@ -1,0 +1,41 @@
+{% extends "frame.html" %}
+
+{% block header %}
+    {% include "nav_open.html" %}
+    {% include "nav_close.html" %}
+{% endblock %}
+
+{% block content %}
+<section class="container centered">
+    <hgroup>
+        <h1>Edit saving</h1>
+        <h2>{{ subcategory }}</h2>
+        <p></p>
+    </hgroup>
+
+    <div class="grid">
+        <div>
+            <form method="POST" class="savings-form">
+                <input type="hidden" name="csrf_token" value="{{ ctx.csrf_token() }}">
+                <input name="old_subcategory" type="hidden" value="{{ subcategory }}">
+
+                <label for="subcategory">Subcategory</label>
+                <input id="subcategory" name="subcategory" required type="text" value="{{ subcategory }}">
+
+                <label for="account">Account</label>
+                <input id="account" name="account" required type="text" value="{{ account }}">
+                <small id="account-helper">Group savings subcategories by assigning them to the same account name.</small>
+
+                <label for="balance">Amount</label>
+
+                <input id="balance" name="balance" type="number" step="0.01" min="0.0" value="{{ balance }}">
+                <small id="balance-helper">Set to 0 to remove the subcategory.</small>
+
+                <input id="submit" name="submit" type="submit" value="Submit">
+            </form>
+        </div>
+        <div></div>
+    </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends "frame.html" %}
+
+{% block header %}
+    {% include "nav_open.html" %}
+    {% include "nav_close.html" %}
+{% endblock %}
+
+
+{% block content %}
+
+<section class="centered container">
+    <section>
+        <hgroup>
+            <h1>Profile settings</h1>
+            <p>Select interesting topic for you...</p>
+        </hgroup>
+    </section>
+
+    <details name="example" class="account-settings">
+        <summary>Change details for <i>{{ ctx.account().user_username() }}</i></span></summary>
+        <form method="POST" action="/account/change/details">
+            <input type="hidden" name="csrf_token" value="{{ ctx.csrf_token() }}">
+
+            <label for="user_full_name">Full name</label>
+            <input id="user_full_name" name="user_full_name" required type="text" value="{{ ctx.account().user_full_name() }}">
+
+            <label for="currency">Currency</label>
+            <input id="currency" maxlength="3" minlength="1" name="currency" required type="text" value="{{ ctx.account().currency() }}">
+            <input id="details_submit" type="submit" value="Update details">
+        </form>
+    </details>
+
+    <details name="example" class="account-settings">
+        <summary>Change password</span></summary>
+        <form method="POST" action="/account/change/password">
+            <input type="hidden" name="csrf_token" value="{{ ctx.csrf_token() }}">
+
+            <label for="password">Current password</label>
+            <input id="password" name="password" required type="password" value="">
+
+            <label for="new_password">New password</label>
+            <input id="new_password" name="new_password" required type="password" value="">
+
+            <label for="confirm_password">Confirm new password</label>
+            <input id="confirm_password" name="confirm_password" required type="password" value="">
+
+            <input type="submit" value="Change password">
+        </form>
+    </details>
+
+    <details {% if !api_token.is_none() %} name="example" open {% endif %}class="account-settings">
+        <summary>API token</span></summary>
+            <form method="POST" action="/account/change/token">
+                <input type="hidden" name="csrf_token" value="{{ ctx.csrf_token() }}">
+
+                <label for="token">X-Api-Key Token</label>
+                <input id="token" name="token" readonly type="text" value="{{ api_token.unwrap_or("First generate...") }}">
+
+                <input name="token_submit" type="submit" value="Generate x-api-key">
+            </form>
+
+
+            <p>
+            Once you generate your token, it lasts a lifetime. The only way to change it is by manually regenerating a new one. Just a heads up: after it's created and shown to you, it won't come back up again. So, make sure you copy it and save it somewhere safe!
+            </p>
+
+            <details name="api-details">
+                <summary>Append expense - example request</summary>
+                    <pre>
+PUT {{ host_url }}/api/v1/{{ ctx.account().user_username() }}/report/append HTTP/1.1
+X-API-Key: (Here put your X-API key)
+Content-type: application/json
+
+{
+    "subcategory": "Coffee",
+    "date": "{{ ctx.now.date().format("%Y-%m-%d") }}",
+    "value": "-12.3",
+    "description": "New beans in town!"
+}
+                    </pre>
+                    Fields: "expense_date" and "description" are optional.
+            </details>
+    </details>
+
+    <details {% if api_token.is_none() %} name="example" open {% endif %}class="account-settings">
+        <summary>How does it works?</span></summary>
+        <p>Book keeping expenses must be simple, fast and robost.</p>
+        <p>Each year consists two files: expenses and categories. Every category can be assigned into one of four
+            category types: <b>income</b>, <b>wants</b>, <b>savings</b> and <b>needs</b>.</p>
+        <p><u>Your goal: keep the the rule 50/30/20</u> - 50% for needs, 30% for wants and 20% for savings.</p>
+    </details>
+
+</section>
+{% endblock %}

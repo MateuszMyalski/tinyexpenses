@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    {% block head %}
+    {% endblock %}
+
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="color-scheme" content="light dark">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.jade.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.colors.min.css">
+    <link rel="stylesheet" href="/static/pico_overrides.css">
+    <link rel="stylesheet" href="/static/styles.css">
+
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon/favicon-16x16.png"> 
+    <link rel='shortcut icon' href="/static/favicon/favicon.ico"">
+    <link rel="manifest" href="/static/favicon/site.webmanifest">
+
+
+    <title>TinyExpenses {{ ctx.title() }}</title>
+</head>
+
+<body>
+    <header class="container" style="padding: 0">
+        {% include "logo.html" %}
+        {% block header %}
+        {% endblock %}
+    </header>
+
+    <main class="container">
+        {% if !ctx.messages().is_empty() %}
+        <section class="container centered">
+            {% for msg in ctx.messages().iter() %}
+            <div class="container" id="toasts">
+                <div class="{{ msg.0 | lowercase }}">
+                {{ msg.1 }}
+                </div>
+            </div>
+            {% endfor %}
+        </section>
+        {% endif %}
+
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer class="container centered">
+        {% include "footer.html" %}
+    </footer>
+</body>
+
+</html>

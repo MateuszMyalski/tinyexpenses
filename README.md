@@ -1,5 +1,9 @@
 ## Run locally
+```bash
+cargo build --release
+SECRET_KEY=<32-char secret key> cargo run --release
 
+```
 
 
 

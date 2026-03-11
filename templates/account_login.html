@@ -1,0 +1,39 @@
+{% extends "frame.html" %}
+
+
+{% block content %}
+<section class="centered container">
+    <h1 style="text-align:center;">Login</h1>
+    <form
+        action="/account/login"
+        method="post"
+        style="margin: 0 auto; max-width: 300px"
+    >
+        <fieldset>
+            <input
+                name="csrf_token"
+                type="hidden"
+                value="{{ ctx.csrf_token() }}"
+            />
+            <input 
+                name="username"
+                placeholder="Login"
+                aria-label="Login"
+                autocomplete="username"
+                autofocus
+            />
+            <input
+                type="password"
+                name="password"
+                placeholder="Password"
+                aria-label="Password"
+                autocomplete="current-password"
+            />
+            <input
+                type="submit"
+                value="Log in"
+            />
+        </fieldset>
+    </form>
+</section>
+{% endblock %}

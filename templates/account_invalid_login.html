@@ -1,0 +1,16 @@
+{% extends "frame.html" %}
+
+{% block header %}
+    {% include "nav_open.html" %}
+    {% include "nav_close.html" %}
+{% endblock %}
+
+{% block content %}
+<section class="container centered">
+    <hgroup>
+        <h1>Ooops!</h1>
+        <p>Seems like <b>password</b> or <b>username</b> is <u>incorrect</u>.</p>
+        <p>Try again using <a href="/account/login">login page</a>.</p>
+    </hgroup>
+</section>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "frame.html" %}
+
+{% block header %}
+    {% include "nav_open.html" %}
+    {% include "nav_close.html" %}
+{% endblock %}
+
+{% block content %}
+<section class="container centered">
+    <section>
+            <hgroup>
+                    <h1>Dashboard</h1>
+                    <p>Choose your tool to manage the budget.</p>
+            </hgroup>
+    </section>
+    <div class="grid dashboard">
+        <div class="container-fluid">
+            <button type="button" onclick="location.href='/report/append'" title="Append to report">
+                <div class="icon">✍️</div>
+                Append to report
+            </button>
+            <button type="button" onclick="location.href='/report/view/{{ ctx.now().year() }}'" title="Yearly report">
+                <div class="icon">🗓️</div>
+                Yearly report
+            </button>
+            <button type="button" onclick="location.href='/report/view/{{ ctx.now().year() }}/{{ ctx.now().month() }}'" title="Monthly report">
+                <div class="icon">📅</div>
+                Monthly report
+            </button>
+        </div>
+        <div class="container-fluid">
+            <button type="button" onclick="location.href='/report/edit/{{ ctx.now().year() }}'" title="Edit report">
+                <div class="icon">✒️</div>
+                Edit report
+            </button>
+            <button type="button" onclick="location.href='/categories/edit/{{ ctx.now().year() }}'" title="Edit categories">
+                <div class="icon">🗃️</div>
+                Edit categories
+            </button>
+            <button type="button" onclick="location.href='/plans/view/{{ ctx.now().year() }}'" title="Budget plans">
+                <div class="icon">💸</div>
+                Budget plans
+            </button>
+        </div>
+        <div class="container-fluid">
+            <button type="button" onclick="location.href='/savings/view'" title="Savings">
+                <div class="icon">💰</div>
+                Savings
+            </button>
+            <button type="button" onclick="location.href='/'" title="Graphs" disabled data-tooltip="Soon!">
+                <div class="icon">📊</div>
+                Graphs
+            </button>
+            <button type="button" onclick="location.href='/account/view'" title="Account settings">
+                <div class="icon">🔧</div>
+                Account settings
+            </button>
+        </div>
+    </div>
+</section>
+{% endblock %}

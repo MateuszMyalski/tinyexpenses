@@ -1,0 +1,115 @@
+{% extends "frame.html" %}
+
+{% block header %}
+    {% include "nav_open.html" %}
+    <ul>
+        <li>
+            <details class="dropdown">
+                <summary>{{ picker_year.selected() }}</summary>
+                <ul>
+                    {% for (value, label) in picker_year.options() %}
+                    <li><a href="{{ value }}/{{ picker_month.selected_as_value() }}">{{ label }}</a></li>
+                    {% endfor %}
+                </ul>
+            </details>
+        </li>
+        <li>
+            <details class="dropdown">
+                <summary>{{ picker_month.selected() }}</summary>
+                <ul>
+                    {% for (value, label) in picker_month.options() %}
+                    <li><a href="{{ value }}">{{ label }}</a></li>
+                    {% endfor %}
+                </ul>
+            </details>
+        </li>
+    </ul>
+    {% include "nav_close.html" %}
+{% endblock %}
+
+{% block content %}
+<section class="centered container">
+    <h1 style="text-align:center">Monthly view</h1>
+    <div>
+        <table class="report monthly striped">
+            <thead>
+                <tr class="balance">
+                    <td colspan="3" >💸 Balance: {{ table.balance() }} {{ ctx.account().currency() }}</td>
+                </tr>
+                <tr>
+                    {% for header in table.headers() %}
+                    <th scope="col">{{ header }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for row in table.subcategories() %}
+                <tr class="{{ row[1] | lowercase }}">
+                    <td class="subcategory-label">{{ row[0] }}</td>
+                    <td class="category-label">{{ row[1][0..1] }}</td>
+                    {% let month0 = view_date.month0() as usize %}
+                    <td class="entry-value {{ table.attributes(row[0], **month0) }}">{{ row[2] }} {{ ctx.account().currency() }}</td>
+                </tr>
+                {% endfor %}
+
+                <tr class="balance">
+                    <td colspan="3" >💸 Balance: {{ table.balance() }} {{ ctx.account().currency() }}</td>
+                </tr>
+
+                <tr class="total-per-month">
+                    {% let net = table.net() %}
+                    <td colspan="2" >{{ net[0] }}</td>
+                    <td class="entry-total-value">{{ net[2] }} {{ ctx.account().currency() }}</td>
+                </tr>
+
+                <tr>
+                    <td colspan="3"><div class="graph-nws" style="--wants: {{ table.sum_wants_prcnt()[2] }}%; --needs: {{ table.sum_needs_prcnt()[2] }}%; --savings: {{ table.sum_savings_prcnt()[2] }}%"></div></td>
+                </tr>
+
+                <tr class="income">
+                    {% let income = table.sum_income() %}
+                    <td colspan="2"  rowspan="2">{{ income[0] }}</td>
+                    <td class="entry-total-value">{{ income[2] }} {{ ctx.account().currency() }}</td>
+                </tr>
+
+                <tr>
+                </tr>
+
+                <tr class="wants">
+                    {% let wants = table.sum_wants() %}
+                    <td colspan="2"  rowspan="2">{{ wants[0] }}</td>
+                    <td class="entry-total-value">{{ wants[2] }} {{ ctx.account().currency() }}</td>
+                </tr>
+
+                <tr>
+                    <td class="entry-total-value">{{ table.sum_wants_prcnt()[2] }} %</td>
+                </tr>
+
+
+                <tr class="needs">
+                    {% let needs = table.sum_needs() %}
+                    <td colspan="2"  rowspan="2">{{ needs[0] }}</td>
+                    <td class="entry-total-value">{{ needs[2] }} {{ ctx.account().currency() }}</td>
+                </tr>
+
+                <tr>
+                    <td class="entry-total-value">{{ table.sum_needs_prcnt()[2] }} %</td>
+                </tr>
+
+                <tr class="savings">
+                    {% let savings = table.sum_savings() %}
+                    <td colspan="2"  rowspan="2">{{ savings[0] }}</td>
+                    <td class="entry-total-value">{{ savings[2] }} {{ ctx.account().currency() }}</td>
+                </tr>
+
+                <tr>
+                    <td class="entry-total-value">{{ table.sum_savings_prcnt()[2] }} %</td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+</section>
+
+{% endblock %}
