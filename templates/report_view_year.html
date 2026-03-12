@@ -42,10 +42,6 @@
             </tr>
             {% endfor %}
 
-            <tr class="balance">
-                <td colspan="15">💸 Balance: {{ table.balance() }} {{ ctx.account().currency() }}</td>
-            </tr>
-
             <tr class="total-per-month">
                 {% let net = table.net() %}
                 <td colspan="2">{{ net[0] }}</td>
@@ -53,6 +49,10 @@
                 <td class="entry-value">{{ value }} {{ ctx.account().currency() }}</td>
                 {% endfor %}
                 <td class="entry-total-value">{{ net[14] }} {{ ctx.account().currency() }}</td>
+            </tr>
+
+            <tr class="balance">
+                <td colspan="15">💸 Balance: {{ table.balance() }} {{ ctx.account().currency() }}</td>
             </tr>
 
             {% let wants_prcnt = table.sum_wants_prcnt() %}
