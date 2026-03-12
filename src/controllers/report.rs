@@ -175,7 +175,7 @@ pub mod get {
             ctx: WebPageContext::new(&title)
                 .with_messages(messages)
                 .with_account(&user),
-            picker: ByYearDatabasePickerView::new(&user.available_plans(), year, "/report/view/"),
+            picker: ByYearDatabasePickerView::new(&user.available_reports(), year, "/report/view/"),
             table: table_view,
         };
 
@@ -199,7 +199,7 @@ pub mod get {
                 .with_csrf(&csrf_token, &session)
                 .await,
             entries: report.content(),
-            picker: ByYearDatabasePickerView::new(&user.available_plans(), year, "/report/edit/"),
+            picker: ByYearDatabasePickerView::new(&user.available_reports(), year, "/report/edit/"),
         }
         .to_html();
 
