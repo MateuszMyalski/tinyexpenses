@@ -129,6 +129,10 @@ table.report td.overspending {
     color: var(--pico-color-red-600);
 }
 
+table.report tr.total-per-month td {
+    font-weight: 700;
+}
+
 table.report tr.income td:first-child {
     border-left: var(--income-color) 10px solid;
 }
