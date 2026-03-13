@@ -2,6 +2,18 @@
 
 {% block header %}
     {% include "nav_open.html" %}
+    <ul>
+        <li>
+            <details class="dropdown">
+                <summary>{{ picker.selected() }}</summary>
+                <ul>
+                    {% for (value, label) in picker.options() %}
+                    <li><a href="{{ value }}">{{ label }}</a></li>
+                    {% endfor %}
+                </ul>
+            </details>
+        </li>
+    </ul>
     {% include "nav_close.html" %}
 {% endblock %}
 

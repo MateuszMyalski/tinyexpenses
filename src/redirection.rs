@@ -71,6 +71,6 @@ pub fn to_report_view(year: i32) -> Redirect {
     Redirect::to(&format!("/report/view/{year}"))
 }
 
-pub fn to_report_append() -> Redirect {
-    Redirect::to("/report/append")
+pub fn to_report_append(year: i32) -> Redirect {
+    Redirect::to(&format!("/report/append/{year}"))
 }

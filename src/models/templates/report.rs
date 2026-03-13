@@ -12,6 +12,7 @@ use chrono::{Datelike, NaiveDate};
 pub struct ViewAppendTmpl<'a> {
     pub ctx: &'a WebPageContext<'a>,
     pub types_with_categories: Vec<(String, Vec<String>)>,
+    pub picker: ByYearDatabasePickerView,
 }
 
 impl<'a> WebPageToHtml for ViewAppendTmpl<'a> {}
