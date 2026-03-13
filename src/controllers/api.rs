@@ -32,6 +32,8 @@ pub mod put {
             .with_date(&payload.date)
             .with_curr_timestamp()
             .with_description(&payload.description.unwrap_or_default())
+            // We need to parse value from string to not overcomplicated extractor, some apps can format
+            // number with comma separators, some with dot.
             .with_value(payload.value.trim().replace(',', ".").parse().unwrap_or_default())
             .with_subcategory(&payload.subcategory);
 
