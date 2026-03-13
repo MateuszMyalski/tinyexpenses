@@ -265,7 +265,6 @@ table.report tr.needs td:first-child {
 
 #toasts div {
     padding: 10px;
-    margin: 5px;
     background-color: var(--pico-form-element-background-color);
     border-radius: var(--pico-border-radius);
     border-left-width: 5px;

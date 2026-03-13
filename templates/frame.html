@@ -37,7 +37,7 @@
         {% if !ctx.messages().is_empty() %}
         <section class="container centered">
             {% for msg in ctx.messages().iter() %}
-            <div class="container" id="toasts">
+            <div id="toasts">
                 <div class="{{ msg.0 | lowercase }}">
                 {{ msg.1 }}
                 </div>
