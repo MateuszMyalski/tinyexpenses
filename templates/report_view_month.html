@@ -53,14 +53,14 @@
                 </tr>
                 {% endfor %}
 
-                <tr class="balance">
-                    <td colspan="3" >💸 Balance: {{ table.balance() }} {{ ctx.account().currency() }}</td>
-                </tr>
-
                 <tr class="total-per-month">
                     {% let net = table.net() %}
                     <td colspan="2" style="text-align: center">{{ net[0] }}</td>
                     <td class="entry-total-value">{{ net[2] }} {{ ctx.account().currency() }}</td>
+                </tr>
+
+                <tr class="balance">
+                    <td colspan="3" >💸 Balance: {{ table.balance() }} {{ ctx.account().currency() }}</td>
                 </tr>
 
                 <tr>
