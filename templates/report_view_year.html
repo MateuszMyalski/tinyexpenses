@@ -44,7 +44,7 @@
 
             <tr class="total-per-month">
                 {% let net = table.net() %}
-                <td colspan="2">{{ net[0] }}</td>
+                <td colspan="2" style="text-align: center">{{ net[0] }}</td>
                 {% for value in net[2..14] %}
                 <td class="entry-value">{{ value }} {{ ctx.account().currency() }}</td>
                 {% endfor %}
