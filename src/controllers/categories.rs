@@ -39,9 +39,10 @@ pub mod get {
         };
 
         let view = categories::EditTmpl {
-            ctx: &WebPageContext::new("- Edit categories")
+            ctx: &WebPageContext::new("- Edit categories", &session)
+                .await
                 .with_messages(messages)
-                .with_csrf(&csrf_token, &session)
+                .with_csrf(&csrf_token)
                 .await,
             categories: categories.content(),
             picker: ByYearDatabasePickerView::new(
@@ -68,9 +69,10 @@ pub mod get {
         };
 
         let view = categories::CreateTmpl {
-            ctx: &WebPageContext::new("- Create categories")
+            ctx: &WebPageContext::new("- Create categories", &session)
+                .await
                 .with_messages(messages)
-                .with_csrf(&csrf_token, &session)
+                .with_csrf(&csrf_token)
                 .await,
             requested_year: year,
             picker: ByYearDatabasePickerView::new(&user.available_categories(), year, ""),

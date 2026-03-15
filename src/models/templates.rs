@@ -32,21 +32,38 @@ pub struct WebPageContext<'a> {
     messages: Vec<(String, String)>,
     account: Option<&'a Config>,
     csrf_token: Option<String>,
+    color_scheme: String,
+    session: &'a Session,
 }
 
 impl<'a> WebPageContext<'a> {
-    pub fn new(title: &'a str) -> Self {
+    pub async fn new(title: &'a str, session: &'a Session) -> Self {
+        let is_dark_color_scheme = match session.get::<bool>("dark_color_scheme").await {
+            Ok(value) => value.unwrap_or(true),
+            Err(_) => true,
+        };
+
         WebPageContext {
             title: title,
             now: Local::now(),
             messages: vec![],
             account: None,
+            session: session,
             csrf_token: None,
+            color_scheme: if is_dark_color_scheme {
+                "dark".to_string()
+            } else {
+                "light".to_string()
+            },
         }
     }
 
     pub fn now(&self) -> &DateTime<Local> {
         &self.now
+    }
+
+    pub fn color_scheme(&self) -> &str {
+        &self.color_scheme
     }
 
     pub fn title(&self) -> &str {
@@ -66,8 +83,8 @@ impl<'a> WebPageContext<'a> {
         &self.messages
     }
 
-    pub async fn with_csrf(mut self, csrf_token: &'a CsrfToken, session: &'a Session) -> Self {
-        self.csrf_token = Some(csrf::regenerate_token(session, csrf_token).await);
+    pub async fn with_csrf(mut self, csrf_token: &'a CsrfToken) -> Self {
+        self.csrf_token = Some(csrf::regenerate_token(self.session, csrf_token).await);
         self
     }
 

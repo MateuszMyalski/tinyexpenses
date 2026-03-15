@@ -31,7 +31,7 @@ pub mod get {
     use axum::{Extension, response::IntoResponse};
     use axum_csrf::CsrfToken;
     use axum_messages::Messages;
-    use chrono::{Local, NaiveDate};
+    use chrono::NaiveDate;
     use tower_sessions::Session;
 
     pub async fn create(
@@ -46,9 +46,10 @@ pub mod get {
         }
 
         let view = report::ViewCreateReportTmpl {
-            ctx: &WebPageContext::new("- Create report")
+            ctx: &WebPageContext::new("- Create report", &session)
+                .await
                 .with_messages(messages)
-                .with_csrf(&csrf_token, &session)
+                .with_csrf(&csrf_token)
                 .await,
             year,
         }
@@ -64,16 +65,15 @@ pub mod get {
         Extension(user): Extension<Account>,
         extraction::Path(year): extraction::Path<i32>,
     ) -> impl IntoResponse {
-        let now = Local::now();
-
         let Ok(categories) = user.get_categories(year) else {
             return redirection::to_categories_create(year).into_response();
         };
 
         let view = report::ViewAppendTmpl {
-            ctx: &WebPageContext::new("- Append report")
+            ctx: &WebPageContext::new("- Append report", &session)
+                .await
                 .with_messages(messages)
-                .with_csrf(&csrf_token, &session)
+                .with_csrf(&csrf_token)
                 .await,
             types_with_categories: categories.map_by_category().into_iter().collect(),
             picker: ByYearDatabasePickerView::new(
@@ -89,6 +89,7 @@ pub mod get {
 
     pub async fn view_month(
         messages: Messages,
+        session: Session,
         Extension(user): Extension<Account>,
         extraction::Path((year, month)): extraction::Path<(i32, u32)>,
     ) -> impl IntoResponse {
@@ -127,7 +128,8 @@ pub mod get {
         let title = format!("-Monthly Budget of {year}-{month:02}");
 
         let view = report::ViewMonthTmpl {
-            ctx: &WebPageContext::new(&title)
+            ctx: &WebPageContext::new(&title, &session)
+                .await
                 .with_messages(messages)
                 .with_account(&user),
             view_date: NaiveDate::from_ymd_opt(year, month, 1)
@@ -146,6 +148,7 @@ pub mod get {
 
     pub async fn view_year(
         messages: Messages,
+        session: Session,
         Extension(user): Extension<Account>,
         extraction::Path(year): extraction::Path<i32>,
     ) -> impl IntoResponse {
@@ -178,7 +181,8 @@ pub mod get {
         let title = format!("- Yearly Budget of {year}");
 
         let view = report::ViewYearTmpl {
-            ctx: WebPageContext::new(&title)
+            ctx: WebPageContext::new(&title, &session)
+                .await
                 .with_messages(messages)
                 .with_account(&user),
             picker: ByYearDatabasePickerView::new(&user.available_reports(), year, "/report/view/"),
@@ -200,9 +204,10 @@ pub mod get {
         };
 
         let view = report::EditTmpl {
-            ctx: &WebPageContext::new("- Edit report")
+            ctx: &WebPageContext::new("- Edit report", &session)
+                .await
                 .with_messages(messages)
-                .with_csrf(&csrf_token, &session)
+                .with_csrf(&csrf_token)
                 .await,
             entries: report.content(),
             picker: ByYearDatabasePickerView::new(&user.available_reports(), year, "/report/edit/"),

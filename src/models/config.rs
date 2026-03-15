@@ -10,6 +10,7 @@ use std::error::Error;
 pub struct Tinyexpenses {
     pub currency: String,
     pub api_token: String,
+    pub dark_color_scheme: bool,
 }
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
@@ -98,5 +99,17 @@ impl Config {
     pub fn generate_token(&mut self) -> Result<(), Box<dyn Error>> {
         self.content_mut().tinyexpenses.api_token = api_token::generate(32);
         Ok(())
+    }
+
+    pub fn set_dark_color_scheme(&mut self) {
+        self.content_mut().tinyexpenses.dark_color_scheme = true
+    }
+
+    pub fn set_light_color_scheme(&mut self) {
+        self.content_mut().tinyexpenses.dark_color_scheme = false
+    }
+
+    pub fn dark_color_scheme(&self) -> bool {
+        self.content().tinyexpenses.dark_color_scheme
     }
 }

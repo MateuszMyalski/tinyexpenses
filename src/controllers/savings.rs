@@ -49,9 +49,10 @@ pub mod get {
         };
 
         let view = savings::EditTmpl {
-            ctx: &WebPageContext::new("- Edit savings")
+            ctx: &WebPageContext::new("- Edit savings", &session)
+                .await
                 .with_messages(messages)
-                .with_csrf(&csrf_token, &session)
+                .with_csrf(&csrf_token)
                 .await,
             account: entry.account_name.get(),
             balance: entry.value.get(),
@@ -83,10 +84,11 @@ pub mod get {
         };
 
         let view = savings::WithdrawTmpl {
-            ctx: &WebPageContext::new("- Withdraw savings")
+            ctx: &WebPageContext::new("- Withdraw savings", &session)
+                .await
                 .with_messages(messages)
                 .with_account(&user)
-                .with_csrf(&csrf_token, &session)
+                .with_csrf(&csrf_token)
                 .await,
             subcategory: entry.subcategory.get().to_string(),
             account: entry.account_name.get().to_string(),
@@ -103,8 +105,9 @@ pub mod get {
     }
 
     pub async fn view(
-        Extension(user): Extension<Account>,
         messages: Messages,
+        session: Session,
+        Extension(user): Extension<Account>,
     ) -> impl IntoResponse {
         let savings = user.get_savings();
 
@@ -115,7 +118,8 @@ pub mod get {
         }
 
         let view = savings::ViewTmpl {
-            ctx: &WebPageContext::new("- View savings")
+            ctx: &WebPageContext::new("- View savings", &session)
+                .await
                 .with_messages(messages)
                 .with_account(&user),
             tables: tables,

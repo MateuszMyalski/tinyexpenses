@@ -39,9 +39,10 @@ pub mod get {
         };
 
         let view = plans::CreateTmpl {
-            ctx: &WebPageContext::new("- Create budget plans")
+            ctx: &WebPageContext::new("- Create budget plans", &session)
+                .await
                 .with_messages(messages)
-                .with_csrf(&csrf_token, &session)
+                .with_csrf(&csrf_token)
                 .await,
             requested_year: year,
             picker: ByYearDatabasePickerView::new(&user.available_plans(), year, ""),
@@ -52,9 +53,8 @@ pub mod get {
     }
 
     pub async fn view(
-        _csrf_token: CsrfToken,
         messages: Messages,
-        _session: Session,
+        session: Session,
         Extension(user): Extension<Account>,
         extraction::Path(year): extraction::Path<i32>,
     ) -> impl IntoResponse {
@@ -74,7 +74,8 @@ pub mod get {
         let title = format!("- Yearly Budget plans of {year}");
 
         let view = plans::ViewTmpl {
-            ctx: &WebPageContext::new(&title)
+            ctx: &WebPageContext::new(&title, &session)
+                .await
                 .with_messages(messages)
                 .with_account(&user),
             view_date: NaiveDate::from_ymd_opt(year, 01, 01)
@@ -98,9 +99,10 @@ pub mod get {
         };
 
         let view = plans::EditTmpl {
-            ctx: &WebPageContext::new("- Edit budget plans")
+            ctx: &WebPageContext::new("- Edit budget plans", &session)
+                .await
                 .with_messages(messages)
-                .with_csrf(&csrf_token, &session)
+                .with_csrf(&csrf_token)
                 .await,
             entries: plans.content(),
             months_labels: views::MONTHS,

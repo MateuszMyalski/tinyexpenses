@@ -7,3 +7,4 @@ active = true
 [tinyexpenses]
 currency = "USD"
 api_token = "vvHsf3-G__dlytnFQTokU--OCY2rkWrmDAg6FC7K6F8"
+dark_color_scheme = true

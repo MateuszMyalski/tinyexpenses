@@ -48,6 +48,38 @@
         </form>
     </details>
 
+    <details name="example" class="account-settings">
+        <summary>Change color scheme</span></summary>
+        <form method="POST" action="/account/change/color">
+            <input type="hidden" name="csrf_token" value="{{ ctx.csrf_token() }}">
+            
+            <fieldset>
+                <label>
+                    <input id="dark_color_scheme"
+                        type="radio"
+                        name="dark_color_scheme"
+                        onChange="this.form.submit()"
+                        value="true"
+                        {% if ctx.account().dark_color_scheme() %} checked {% endif %}
+                    />
+                    Dark
+                </label>
+
+                <label>
+                    <input id="dark_color_scheme"
+                        type="radio"
+                        name="dark_color_scheme"
+                        onChange="this.form.submit()"
+                        value="false"
+                        {% if !ctx.account().dark_color_scheme() %} checked {% endif %}
+                    />
+                    Light
+                </label>
+            </fieldset>
+
+        </form>
+    </details>
+
     <details {% if !api_token.is_none() %} name="example" open {% endif %}class="account-settings">
         <summary>API token</span></summary>
             <form method="POST" action="/account/change/token">

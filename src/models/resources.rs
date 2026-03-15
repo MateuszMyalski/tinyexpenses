@@ -10,8 +10,6 @@ pub struct DatabasePicker {
     pub active: i32,
 }
 
-// pub type SavingsSummary = Vec<Account>;
-
 pub struct BudgetSummary {
     pub subcategories: BTreeMap<String, (String, Balances)>,
     pub values_attr: HashMap<String, [String; 12]>,

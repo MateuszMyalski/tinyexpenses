@@ -10,10 +10,13 @@ pub mod get {
     use crate::models::templates::{WebPageContext, WebPageToHtml, dashboard};
     use axum::response::IntoResponse;
     use axum_messages::Messages;
+    use tower_sessions::Session;
 
-    pub async fn root(messages: Messages) -> impl IntoResponse {
+    pub async fn root(messages: Messages, session: Session) -> impl IntoResponse {
         dashboard::Tmpl {
-            ctx: &WebPageContext::new("- Dashboard").with_messages(messages),
+            ctx: &WebPageContext::new("- Dashboard", &session)
+                .await
+                .with_messages(messages),
         }
         .to_html()
     }

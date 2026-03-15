@@ -13,14 +13,17 @@ pub mod get {
     use crate::redirection;
     use axum::response::IntoResponse;
     use axum_messages::Messages;
+    use tower_sessions::Session;
 
     pub async fn index() -> impl IntoResponse {
         redirection::to_dashboard()
     }
 
-    pub async fn error(messages: Messages) -> impl IntoResponse {
+    pub async fn error(messages: Messages, session: Session) -> impl IntoResponse {
         error::UrlTmpl {
-            ctx: &WebPageContext::new("- URL Error").with_messages(messages),
+            ctx: &WebPageContext::new("- URL Error", &session)
+                .await
+                .with_messages(messages),
         }
         .to_html()
         .into_response()

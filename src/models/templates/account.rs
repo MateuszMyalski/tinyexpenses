@@ -55,3 +55,9 @@ pub struct ViewChangePasswordForm {
 pub struct ViewApiTokenForm {
     pub csrf_token: String,
 }
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct ViewChangeColorSchemeForm {
+    pub csrf_token: String,
+    pub dark_color_scheme: bool,
+}

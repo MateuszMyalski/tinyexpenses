@@ -11,6 +11,7 @@ pub fn router() -> Router {
         .route("/change/details", post(self::post::change_details))
         .route("/change/password", post(self::post::change_password))
         .route("/change/token", post(self::post::change_token))
+        .route("/change/color", post(self::post::change_color_scheme))
         .route_layer(axum::middleware::from_fn(require_auth));
 
     let unprotected = Router::new()
@@ -37,9 +38,10 @@ pub mod get {
         session: Session,
     ) -> impl IntoResponse {
         let view = account::LoginTmpl {
-            ctx: &WebPageContext::new("- Login")
+            ctx: &WebPageContext::new("- Login", &session)
+                .await
                 .with_messages(messages)
-                .with_csrf(&csrf_token, &session)
+                .with_csrf(&csrf_token)
                 .await,
         }
         .to_html();
@@ -47,8 +49,8 @@ pub mod get {
         (csrf_token, view).into_response()
     }
 
-    pub async fn logout(messages: Messages, mut auth: AuthSession) -> impl IntoResponse {
-        if let Err(err) = auth.logout().await {
+    pub async fn logout(messages: Messages, mut auth_session: AuthSession) -> impl IntoResponse {
+        if let Err(err) = auth_session.logout().await {
             error!("Cannot logout user.");
             debug!("{}", err);
             messages.error("Unable to logout user.");
@@ -72,10 +74,11 @@ pub mod get {
             .unwrap_or(None);
 
         let view = account::ViewTmpl {
-            ctx: &WebPageContext::new("- View account")
+            ctx: &WebPageContext::new("- View account", &session)
+                .await
                 .with_account(&user)
                 .with_messages(messages)
-                .with_csrf(&csrf_token, &session)
+                .with_csrf(&csrf_token)
                 .await,
             api_token: api_token.as_deref(),
             host_url: hostname.host().unwrap_or("https://(your domain)"),
@@ -117,7 +120,9 @@ pub mod post {
             Ok(Some(user)) => user,
             Ok(None) => {
                 let view = account::InvalidLoginTmpl {
-                    ctx: &WebPageContext::new("- Error login").with_messages(messages),
+                    ctx: &WebPageContext::new("- Error login", &session)
+                        .await
+                        .with_messages(messages),
                 };
                 return view.to_html().into_response();
             }
@@ -132,6 +137,11 @@ pub mod post {
             debug!("{}", err);
             messages.error("Cannot login user.");
         }
+
+        let _ = auth_session
+            .session
+            .insert("dark_color_scheme", user.config.dark_color_scheme())
+            .await;
 
         redirection::to_index().into_response()
     }
@@ -160,6 +170,45 @@ pub mod post {
         }
 
         messages.success("Details changed.");
+        redirection::to_account_view().into_response()
+    }
+
+    pub async fn change_color_scheme(
+        messages: Messages,
+        csrf_token: CsrfToken,
+        session: Session,
+        Extension(mut user): Extension<Account>,
+        Form(form): Form<account::ViewChangeColorSchemeForm>,
+    ) -> impl IntoResponse {
+        if !csrf::verify(&session, &csrf_token, &form.csrf_token).await {
+            messages.error("CSRF token is invalid.");
+            return redirection::to_account_view().into_response();
+        }
+
+        csrf::remove_token(&session).await;
+
+        if form.dark_color_scheme {
+            user.config.set_dark_color_scheme();
+        } else {
+            user.config.set_light_color_scheme();
+        }
+
+        if let Err(err) = user.config.write() {
+            messages.error("Failed changing color scheme - cannot store config.");
+            debug!("{}", err);
+            return redirection::to_account_view().into_response();
+        }
+
+        if form.dark_color_scheme {
+            messages.success("Color scheme changed to dark.");
+        } else {
+            messages.success("Color scheme changed to light.");
+        }
+
+        let _ = session
+            .insert("dark_color_scheme", user.config.dark_color_scheme())
+            .await;
+
         redirection::to_account_view().into_response()
     }
 
