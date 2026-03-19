@@ -63,11 +63,11 @@ impl Config {
         Ok(())
     }
 
-    pub fn user_password_verify(&self, password: &str) -> bool {
-        if self.content().user.password_hash.is_empty() {
-            return true;
-        }
+    pub fn user_empty_password(&self) -> bool {
+        self.content().user.password_hash.is_empty()
+    }
 
+    pub fn user_password_verify(&self, password: &str) -> bool {
         PasswordHash::new(&self.content().user.password_hash)
             .ok()
             .and_then(|hash| Scrypt.verify_password(password.as_bytes(), &hash).ok())

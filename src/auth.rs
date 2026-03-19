@@ -86,6 +86,11 @@ impl AuthnBackend for UsersBackend {
             return Ok(None);
         }
 
+        if account.config.user_empty_password() {
+            warn!("User {} logging with empty password.", creds.username);
+            return Ok(Some(account.clone()));
+        }
+
         if account.config.user_password_verify(&creds.password) {
             Ok(Some(account.clone()))
         } else {

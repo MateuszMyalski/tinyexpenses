@@ -115,10 +115,19 @@ pub trait SavingsAccountView {
 }
 
 /*
- * Subcat A ||||||| 25%
- * Subcat B ||||| 15%
- *        ...
- * Subcat N || 5%
+ * Category Name A --------------
+ *  Subcategory 1 ||||||| 25%
+ *  Subcategory 2 ||||| 15%
+ *               ...
+ *  Subcategory n || 5%
+ *
+ *               ...
+ * 
+ * Category Name n --------------
+ *  Subcategory 1 ||||||||| 34%
+ *  Subcategory 2 ||||||| 27%
+ *               ...
+ *  Subcategory n ||| 15%
  *
  */
 pub trait GraphView {

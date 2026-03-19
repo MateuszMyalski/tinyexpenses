@@ -136,12 +136,17 @@ pub mod post {
             error!("Cannot login user.");
             debug!("{}", err);
             messages.error("Cannot login user.");
+            return redirection::to_index().into_response();
         }
 
         let _ = auth_session
             .session
             .insert("dark_color_scheme", user.config.dark_color_scheme())
             .await;
+
+        if user.config.user_empty_password() {
+            messages.warning("Please set your password in the user settings.");
+        }
 
         redirection::to_index().into_response()
     }
