@@ -1,37 +1,75 @@
 :root {
-  --ss-primary-color: var(--pico-primary);
-  --ss-bg-color: var(--pico-form-element-background-color);
-  --ss-font-color: var(--pico-color);
-  --ss-border-color: var(--pico-muted-border-color);
-  --ss-border-radius: var(--pico-border-radius);
-  --ss-disabled-color: none;
-  --ss-animation-timing: 0.2s;
+    --ss-primary-color: var(--pico-primary);
+    --ss-bg-color: var(--pico-form-element-background-color);
+    --ss-font-color: var(--pico-color);
+    --ss-border-color: var(--pico-muted-border-color);
+    --ss-border-radius: var(--pico-border-radius);
+    --ss-disabled-color: none;
+    --ss-animation-timing: 0.2s;
+
+    --income-darker-color: var(--pico-color-green-700);
+    --wants-darker-color: var(--pico-color-red-700);
+    --savings-darker-color: var(--pico-color-yellow-700);
+    --needs-darker-color: var(--pico-color-blue-700);
+    --other-darker-color: var(--pico-color-zinc-700);
 }
 
-:root:not([data-theme=dark]), [data-theme=light] {
+:root:not([data-theme=dark]),
+[data-theme=light] {
     --income-color: var(--pico-color-green-300);
     --wants-color: var(--pico-color-red-300);
     --savings-color: var(--pico-color-yellow-300);
     --needs-color: var(--pico-color-blue-300);
+    --other-color: var(--pico-color-zinc-300);
 
-    #toasts div.debug { border-left-color: var(--pico-color-sand-300); }
-    #toasts div.info  { border-left-color: var(--pico-color-azure-300); }
-    #toasts div.success { border-left-color: var(--pico-color-green-300); }
-    #toasts div.warning { border-left-color: var(--pico-color-yellow-300); }
-    #toasts div.error { border-left-color: var(--pico-color-red-300); }
+    #toasts div.debug {
+        border-left-color: var(--pico-color-sand-300);
+    }
+
+    #toasts div.info {
+        border-left-color: var(--pico-color-azure-300);
+    }
+
+    #toasts div.success {
+        border-left-color: var(--pico-color-green-300);
+    }
+
+    #toasts div.warning {
+        border-left-color: var(--pico-color-yellow-300);
+    }
+
+    #toasts div.error {
+        border-left-color: var(--pico-color-red-300);
+    }
 }
 
-:root:not([data-theme=light]), [data-theme=dark] {
+:root:not([data-theme=light]),
+[data-theme=dark] {
     --income-color: var(--pico-color-green-600);
     --wants-color: var(--pico-color-red-600);
     --savings-color: var(--pico-color-yellow-600);
     --needs-color: var(--pico-color-blue-600);
+    --other-color: var(--pico-color-zinc-600);
 
-    #toasts div.debug { border-left-color: var(--pico-color-sand-800); }
-    #toasts div.info  { border-left-color: var(--pico-color-azure-800); }
-    #toasts div.success { border-left-color: var(--pico-color-green-800); }
-    #toasts div.warning { border-left-color: var(--pico-color-yellow-800); }
-    #toasts div.error { border-left-color: var(--pico-color-red-800); }
+    #toasts div.debug {
+        border-left-color: var(--pico-color-sand-800);
+    }
+
+    #toasts div.info {
+        border-left-color: var(--pico-color-azure-800);
+    }
+
+    #toasts div.success {
+        border-left-color: var(--pico-color-green-800);
+    }
+
+    #toasts div.warning {
+        border-left-color: var(--pico-color-yellow-800);
+    }
+
+    #toasts div.error {
+        border-left-color: var(--pico-color-red-800);
+    }
 }
 
 [data-theme=light] pre#logo {
@@ -51,6 +89,7 @@ pre#logo {
 
 .centered {
     margin: 0 auto;
+    margin-bottom: var(--pico-block-spacing-vertical);
 }
 
 span#heart {
@@ -74,15 +113,15 @@ table#csv-view th {
     }
 
     table.monthly {
-        table-layout:fixed;
+        table-layout: fixed;
     }
 
     table.monthly td.subcategory-label {
         text-overflow: ellipsis;
     }
 
-    table.monthly td { 
-        overflow: hidden; 
+    table.monthly td {
+        overflow: hidden;
     }
 }
 
@@ -288,6 +327,7 @@ table.report tr.needs td:first-child {
     padding: var(--pico-form-element-spacing-vertical) var(--pico-form-element-spacing-horizontal);
     margin: 0;
 }
+
 .ss-content .ss-list .ss-option.ss-disabled {
     opacity: var(--pico-form-element-disabled-opacity);
 }
@@ -301,8 +341,46 @@ table.report tr.needs td:first-child {
     background-repeat: no-repeat;
     height: 25px;
     background-image: linear-gradient(to right,
-                        var(--needs-color) var(--needs),
-                        var(--wants-color)  var(--needs) calc(var(--needs) + var(--wants)),
-                        var(--savings-color) var(--wants)
-                        );
+            var(--needs-color) var(--needs),
+            var(--wants-color) var(--needs) calc(var(--needs) + var(--wants)),
+            var(--savings-color) var(--wants));
+}
+
+#nws-chart .bar,
+#nws-chart .legend {
+    --color-1: var(--needs-color);
+    --color-2: var(--wants-color);
+    --color-3: var(--savings-color);
+    --color-4: var(--other-color);
+    justify-content: center;
+    border: none;
+}
+
+#needs-chart .bar th[scope="row"] b,
+#wants-chart .bar th[scope="row"] b,
+#savings-chart .bar th[scope="row"] b {
+    text-overflow: ellipsis;
+    min-width: 0;
+    overflow: hidden;
+}
+
+#needs-chart .bar,
+#wants-chart .bar,
+#savings-chart .bar {
+    --data-axes-color: var(--pico-form-element-border-color);
+    --primary-axis-style: solid;
+    --primary-axis-width: 1px;
+}
+
+#wants-chart .bar {
+    --color: var(--wants-color);
+
+}
+
+#needs-chart .bar {
+    --color: var(--needs-color);
+}
+
+#savings-chart .bar {
+    --color: var(--savings-color);
 }

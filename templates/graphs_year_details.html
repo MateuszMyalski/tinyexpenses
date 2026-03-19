@@ -1,0 +1,322 @@
+{% extends "frame.html" %}
+
+{% block header %}
+{% include "nav_open.html" %}
+<ul>
+    <li>
+        <details class="dropdown">
+            <summary>{{ picker.selected() }}</summary>
+            <ul>
+                {% for (value, label) in picker.options() %}
+                <li><a href="{{ value }}">{{ label }}</a></li>
+                {% endfor %}
+            </ul>
+        </details>
+    </li>
+</ul>
+{% include "nav_close.html" %}
+{% endblock %}
+
+{% block head %}
+<script src="https://unpkg.com/chart.js@3"></script>
+<script src="https://unpkg.com/@sgratzl/chartjs-chart-boxplot@3"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/charts.css/dist/charts.min.css">
+{% endblock %}
+
+{% block content %}
+<section class="container centered">
+    <hgroup>
+        <h1>Year in details</h1>
+        <p>Check where your money is flowing, analyze trends, find budget holes using graphs and simple analysis.</p>
+    </hgroup>
+</section>
+
+<section class="container centered">
+    <h2>Per category spending</h2>
+    <div id="nws-chart">
+        <table class="charts-css bar multiple stacked data-center">
+            <thead>
+                <tr>
+                    <th scope="col">Needs</th>
+                    <th scope="col">Wants</th>
+                    <th scope="col">Savings</th>
+                    <th scope="col">Not assigned</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="--size: calc({{ graph.income_to_needs_prcnt() }} / 100);">
+                        <b>
+                            {% if graph.income_to_needs_prcnt() > 0 %}
+                            {{ graph.income_to_needs_prcnt()}}%
+                            {% else %}
+                            0%{% endif %}
+                        </b>
+                    </td>
+
+                    <td style="--size: calc({{ graph.income_to_wants_prcnt() }} / 100);">
+                        <b>
+                            {% if graph.income_to_wants_prcnt() > 0 %}
+                            {{ graph.income_to_wants_prcnt()}}%
+                            {% else %}
+                            0%{% endif %}
+                        </b>
+                    </td>
+
+                    <td style="--size: calc({{ graph.income_to_savings_prcnt() }} / 100);">
+                        <b>
+                            {% if graph.income_to_savings_prcnt() > 0 %}
+                            {{ graph.income_to_savings_prcnt()}}%
+                            {% else %}
+                            0%{% endif %}
+                        </b>
+                    </td>
+
+                    {% let left = 100 - (graph.income_to_wants_prcnt() + graph.income_to_needs_prcnt() +
+                    graph.income_to_savings_prcnt()) %}
+                    <td style="--size: calc({{ left }} / 100);">
+                        <b>
+                            {% if left > 0 %}{{ left }}%{% endif %}
+                        </b>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <ul class="charts-css legend legend-inline legend-rectangle">
+            <li>Needs</li>
+            <li>Wants</li>
+            <li>Savings</li>
+            <li>Other</li>
+        </ul>
+    </div>
+</section>
+
+<section class="container centered">
+    <h2>Breakdown of subcategories by category</h2>
+</section>
+
+<section class="container centered">
+    <div id="needs-chart">
+        <table class="charts-css bar show-labels data-spacing-4 show-data-axes show-heading">
+            <caption>
+                <h3>Needs subcategories</h3>
+            </caption>
+            <thead>
+                <tr>
+                    <th scope="col">Subcategory</th>
+                    <th scope="col">Spending</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for (label, value) in graph.needs_to_subcategories_prcnt() %}
+                <tr>
+                    <th scope="row"><b>{{ label }}</b></th>
+                    <td style="--size: calc({{ value }} / 100);">
+                        <span class="data outside">
+                            {% if value > 0 %}{{ value }}%{% else %} 0%{% endif %}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="container centered">
+    <div id="wants-chart">
+
+        <table class="charts-css bar show-labels data-spacing-4 show-data-axes show-heading">
+            <caption>
+                <h3>Wants subcategories</h3>
+            </caption>
+            <thead>
+                <tr>
+                    <th scope="col">Subcategory</th>
+                    <th scope="col">Spending</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for (label, value) in graph.wants_to_subcategories_prcnt() %}
+                <tr>
+                    <th scope="row"><b>{{ label }}</b></th>
+                    <td style="--size: calc({{ value }} / 100);">
+                        <span class="data outside">
+                            {% if value > 0 %}{{ value }}%{% else %}0%{% endif %}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</section>
+
+<section class="container centered">
+    <div id="savings-chart">
+        <table class="charts-css bar show-labels data-spacing-4 show-data-axes show-heading">
+            <caption>
+                <h3>Savings subcategories</h3>
+            </caption>
+            <thead>
+                <tr>
+                    <th scope="col">Subcategory</th>
+                    <th scope="col">Spending</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for (label, value) in graph.savings_to_subcategories_prcnt() %}
+                <tr>
+                    <th scope="row"><b>{{ label }}</b></th>
+                    <td style="--size: calc({{ value }} / 100);">
+                        <span class="data outside">
+                            {% if value > 0 %}{{ value }}%{% else %} 0%{% endif %}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="container centered">
+    <div id="container" style="width: 100%; height: 800px">
+        <canvas id="boxplot-graph"></canvas>
+    </div>
+
+    <button id="boxplot-toggle-scale">Switch to Logarithmic Scale</button>
+</section>
+
+<script>
+    var monthLabels = [{% for month in months_label %}'{{ month[0..3] }}',{% endfor %}];
+
+    var needsDataSets = [
+        {% for row in graph.needs_subcategories_values().into_iter() %}
+        [{% for value in row %}{{ value }},{% endfor %}],
+        {% endfor %}
+    ];
+
+    var wantsDataSets = [
+        {% for row in graph.wants_subcategories_values().into_iter() %}
+        [{% for value in row %}{{ value }},{% endfor %}],
+        {% endfor %}
+    ];
+
+    var savingsDataSets = [
+        {% for row in graph.savings_subcategories_values().into_iter() %}
+        [{% for value in row %}{{ value }},{% endfor %}],
+        {% endfor %}
+    ];
+
+
+    const boxplotData = {
+        labels: monthLabels,
+        datasets: [{
+            label: 'Needs',
+            backgroundColor: window.getComputedStyle(document.body).getPropertyValue('--needs-color'),
+            borderColor: window.getComputedStyle(document.body).getPropertyValue('--needs-darker-color'),
+            borderWidth: 1,
+            outlierColor: '#999999',
+            padding: 10,
+            itemRadius: 0,
+            data: needsDataSets,
+        }, {
+            label: 'Wants',
+            backgroundColor: window.getComputedStyle(document.body).getPropertyValue('--wants-color'),
+            borderColor: window.getComputedStyle(document.body).getPropertyValue('--wants-darker-color'),
+            borderWidth: 1,
+            outlierColor: '#999999',
+            padding: 10,
+            itemRadius: 0,
+            data: wantsDataSets,
+        }, {
+            label: 'Savings',
+            backgroundColor: window.getComputedStyle(document.body).getPropertyValue('--savings-color'),
+            borderColor: window.getComputedStyle(document.body).getPropertyValue('--savings-darker-color'),
+            borderWidth: 1,
+            outlierColor: '#999999',
+            padding: 10,
+            itemRadius: 0,
+            data: savingsDataSets,
+        }]
+    };
+
+    window.onload = () => {
+        const ctx = document.getElementById("boxplot-graph").getContext("2d");
+        window.myBar = new Chart(ctx, {
+            type: 'boxplot',
+            data: boxplotData,
+            options: {
+                color: window.getComputedStyle(document.body).getPropertyValue('--pico-color'),
+                elements: {
+                    boxandwhiskers: {
+                        medianColor: window.getComputedStyle(document.body).getPropertyValue('--pico-color-green-450'),
+                        itemBackgroundColor: window.getComputedStyle(document.body).getPropertyValue('--pico-color-red-450'),
+                    }
+                },
+                coef: Infinity,
+                responsive: true,
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Needs-Wants-Savings Box plot'
+                },
+                indexAxis: 'y',
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        ticks: {
+                            color: window.getComputedStyle(document.body).getPropertyValue('--pico-color'),
+                            font: {
+                                size: 15,
+                                weight: 'bold',
+                            }
+                        },
+                        grid: {
+                            color: window.getComputedStyle(document.body).getPropertyValue('--pico-form-element-border-color')
+                        },
+                        title: {
+                            text: "{{ ctx.account().currency() }}",
+                            display: true,
+                            color: window.getComputedStyle(document.body).getPropertyValue('--pico-color'),
+                            font: {
+                                size: 15,
+                                weight: 'bold',
+                            }
+                        },
+                    },
+                    y: {
+                        ticks: {
+                            color: window.getComputedStyle(document.body).getPropertyValue('--pico-color'),
+                            font: {
+                                size: 15,
+                                weight: 'bold',
+                            }
+                        },
+                        grid: {
+                            color: window.getComputedStyle(document.body).getPropertyValue('--pico-form-element-border-color')
+                        }
+                    }
+                },
+            }
+        });
+
+        const toggleButton = document.getElementById('boxplot-toggle-scale');
+        let isLogarithmic = false;
+
+        toggleButton.addEventListener('click', () => {
+            isLogarithmic = !isLogarithmic;
+            window.myBar.options.scales.x.type = isLogarithmic ? 'logarithmic' : 'linear';
+            toggleButton.textContent = isLogarithmic ? 'Switch to Linear Scale' : 'Switch to Logarithmic Scale';
+            window.myBar.update();
+        });
+    };
+
+</script>
+
+{% endblock %}

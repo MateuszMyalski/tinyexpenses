@@ -11,6 +11,7 @@ pub mod account;
 pub mod categories;
 pub mod dashboard;
 pub mod error;
+pub mod graphs;
 pub mod index;
 pub mod plans;
 pub mod report;

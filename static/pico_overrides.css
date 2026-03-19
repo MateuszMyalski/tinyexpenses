@@ -14,6 +14,13 @@
         --pico-font-size: 97.5%;
         /* Original: 112.5% */
     }
+
+
+    #needs-chart .bar,
+    #wants-chart .bar,
+    #savings-chart .bar {
+        --labels-size: 200px;
+    }
 }
 
 @media (min-width: 1024px) {
@@ -51,7 +58,12 @@
     }
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
     --pico-font-weight: 600;
     /* Original: 700 */
 }

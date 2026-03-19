@@ -1,30 +1,34 @@
 {% extends "frame.html" %}
 
+{% block head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/charts.css/dist/charts.min.css">
+{% endblock %}
+
 {% block header %}
-    {% include "nav_open.html" %}
-    <ul>
-        <li>
-            <details class="dropdown">
-                <summary>{{ picker_year.selected() }}</summary>
-                <ul>
-                    {% for (value, label) in picker_year.options() %}
-                    <li><a href="{{ value }}/{{ picker_month.selected_as_value() }}">{{ label }}</a></li>
-                    {% endfor %}
-                </ul>
-            </details>
-        </li>
-        <li>
-            <details class="dropdown">
-                <summary>{{ picker_month.selected() }}</summary>
-                <ul>
-                    {% for (value, label) in picker_month.options() %}
-                    <li><a href="{{ value }}">{{ label }}</a></li>
-                    {% endfor %}
-                </ul>
-            </details>
-        </li>
-    </ul>
-    {% include "nav_close.html" %}
+{% include "nav_open.html" %}
+<ul>
+    <li>
+        <details class="dropdown">
+            <summary>{{ picker_year.selected() }}</summary>
+            <ul>
+                {% for (value, label) in picker_year.options() %}
+                <li><a href="{{ value }}/{{ picker_month.selected_as_value() }}">{{ label }}</a></li>
+                {% endfor %}
+            </ul>
+        </details>
+    </li>
+    <li>
+        <details class="dropdown">
+            <summary>{{ picker_month.selected() }}</summary>
+            <ul>
+                {% for (value, label) in picker_month.options() %}
+                <li><a href="{{ value }}">{{ label }}</a></li>
+                {% endfor %}
+            </ul>
+        </details>
+    </li>
+</ul>
+{% include "nav_close.html" %}
 {% endblock %}
 
 {% block content %}
@@ -34,7 +38,7 @@
         <table class="report monthly striped">
             <thead>
                 <tr class="balance">
-                    <td colspan="3" >💸 Balance: {{ table.balance() }} {{ ctx.account().currency() }}</td>
+                    <td colspan="3">💸 Balance: {{ table.balance() }} {{ ctx.account().currency() }}</td>
                 </tr>
                 <tr>
                     {% for header in table.headers() %}
@@ -49,7 +53,8 @@
                     <td class="subcategory-label">{{ row[0] }}</td>
                     <td class="category-label">{{ row[1][0..1] }}</td>
                     {% let month0 = view_date.month0() as usize %}
-                    <td class="entry-value {{ table.attributes(row[0], **month0) }}">{{ row[2] }} {{ ctx.account().currency() }}</td>
+                    <td class="entry-value {{ table.attributes(row[0], **month0) }}">{{ row[2] }} {{
+                        ctx.account().currency() }}</td>
                 </tr>
                 {% endfor %}
 
@@ -60,16 +65,68 @@
                 </tr>
 
                 <tr class="balance">
-                    <td colspan="3" >💸 Balance: {{ table.balance() }} {{ ctx.account().currency() }}</td>
+                    <td colspan="3">💸 Balance: {{ table.balance() }} {{ ctx.account().currency() }}</td>
                 </tr>
 
                 <tr>
-                    <td colspan="3"><div class="graph-nws" style="--wants: {{ table.sum_wants_prcnt()[2] }}%; --needs: {{ table.sum_needs_prcnt()[2] }}%; --savings: {{ table.sum_savings_prcnt()[2] }}%"></div></td>
+                    <td colspan="3">
+                        <div id="nws-chart">
+                            <table class="charts-css bar multiple stacked data-center">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Needs</th>
+                                        <th scope="col">Wants</th>
+                                        <th scope="col">Savings</th>
+                                        <th scope="col">Not assigned</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="--size: calc({{ table.sum_needs_wants_savings_prcnt().0 }} / 100);">
+                                            <b>
+                                                {% if table.sum_needs_wants_savings_prcnt().0 > 0 %}
+                                                {{ table.sum_needs_wants_savings_prcnt().0 }}%
+                                                {% else %}
+                                                0%{% endif %}
+                                            </b>
+                                        </td>
+
+                                        <td style="--size: calc({{ table.sum_needs_wants_savings_prcnt().1 }} / 100);">
+                                            <b>
+                                                {% if table.sum_needs_wants_savings_prcnt().1 > 0 %}
+                                                {{ table.sum_needs_wants_savings_prcnt().1 }}%
+                                                {% else %}
+                                                0%{% endif %}
+                                            </b>
+                                        </td>
+
+                                        <td style="--size: calc({{ table.sum_needs_wants_savings_prcnt().2 }} / 100);">
+                                            <b>
+                                                {% if table.sum_needs_wants_savings_prcnt().2 > 0 %}
+                                                {{ table.sum_needs_wants_savings_prcnt().2 }}%
+                                                {% else %}
+                                                0%{% endif %}
+                                            </b>
+                                        </td>
+
+                                        {% let left = 100 - (table.sum_needs_wants_savings_prcnt().0 +
+                                        table.sum_needs_wants_savings_prcnt().1 +
+                                        table.sum_needs_wants_savings_prcnt().2) %}
+                                        <td style="--size: calc({{ left }} / 100);">
+                                            <b>
+                                                {% if left > 0 %}{{ left }}%{% endif %}
+                                            </b>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
                 </tr>
 
                 <tr class="income">
                     {% let income = table.sum_income() %}
-                    <td colspan="2"  rowspan="2">{{ income[0] }}</td>
+                    <td colspan="2" rowspan="2">{{ income[0] }}</td>
                     <td class="entry-total-value">{{ income[2] }} {{ ctx.account().currency() }}</td>
                 </tr>
 
@@ -78,7 +135,7 @@
 
                 <tr class="wants">
                     {% let wants = table.sum_wants() %}
-                    <td colspan="2"  rowspan="2">{{ wants[0] }}</td>
+                    <td colspan="2" rowspan="2">{{ wants[0] }}</td>
                     <td class="entry-total-value">{{ wants[2] }} {{ ctx.account().currency() }}</td>
                 </tr>
 
@@ -89,7 +146,7 @@
 
                 <tr class="needs">
                     {% let needs = table.sum_needs() %}
-                    <td colspan="2"  rowspan="2">{{ needs[0] }}</td>
+                    <td colspan="2" rowspan="2">{{ needs[0] }}</td>
                     <td class="entry-total-value">{{ needs[2] }} {{ ctx.account().currency() }}</td>
                 </tr>
 
@@ -99,7 +156,7 @@
 
                 <tr class="savings">
                     {% let savings = table.sum_savings() %}
-                    <td colspan="2"  rowspan="2">{{ savings[0] }}</td>
+                    <td colspan="2" rowspan="2">{{ savings[0] }}</td>
                     <td class="entry-total-value">{{ savings[2] }} {{ ctx.account().currency() }}</td>
                 </tr>
 

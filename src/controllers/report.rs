@@ -135,7 +135,7 @@ pub mod get {
             view_date: NaiveDate::from_ymd_opt(year, month, 1)
                 .expect("Hardcoded date must be valid"),
             picker_year: ByYearDatabasePickerView::new(
-                &user.available_plans(),
+                &&user.available_reports(),
                 year,
                 "/report/view/",
             ),

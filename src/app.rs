@@ -85,6 +85,7 @@ impl App {
             .nest("/categories", controllers::categories::router())
             .nest("/account", controllers::account::router())
             .nest("/plans", controllers::plans::router())
+            .nest("/graphs", controllers::graphs::router())
             .nest("/api", controllers::api::router())
             .nest_service("/static", ServeDir::new("static"))
             .layer(MessagesManagerLayer)

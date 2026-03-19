@@ -2,6 +2,8 @@ use crate::budget::Budget;
 use crate::models::csv::tables::Categories;
 use crate::models::csv::types::PlansEntry;
 use crate::models::resources;
+use std::collections::BTreeMap;
+use std::iter::zip;
 
 pub const MONTHS: [&'static str; 12] = [
     "January",
@@ -82,6 +84,7 @@ pub trait BudgetSummaryView {
     fn sum_wants_prcnt(&self) -> Self::Cells;
     fn sum_needs(&self) -> Self::Cells;
     fn sum_needs_prcnt(&self) -> Self::Cells;
+    fn sum_needs_wants_savings_prcnt(&self) -> (i32, i32, i32);
     fn balance(&self) -> String;
 }
 
@@ -94,21 +97,42 @@ pub struct YearReportSummaryView {
 }
 
 /*
-* |----------------------------------|
-* | Account name | total             |
-* |              |                   |
-* | El 1         | balance | prcnt   |
-* | El 2         | balance | prcnt   |
-*               ...
-* | El n         | balance | prcnt   |
-
-*/
+ * |----------------------------------|
+ * | Account name | total             |
+ * |              |                   |
+ * | El 1         | balance | prcnt   |
+ * | El 2         | balance | prcnt   |
+ *               ...
+ * | El n         | balance | prcnt   |
+ *
+ */
 pub trait SavingsAccountView {
     type ElementsInfoCells;
 
     fn name(&self) -> String;
     fn elements(&self) -> Vec<Self::ElementsInfoCells>;
     fn total(&self) -> String;
+}
+
+/*
+ * Subcat A ||||||| 25%
+ * Subcat B ||||| 15%
+ *        ...
+ * Subcat N || 5%
+ *
+ */
+pub trait GraphView {
+    fn income_to_savings_prcnt(&self) -> i32;
+    fn income_to_needs_prcnt(&self) -> i32;
+    fn income_to_wants_prcnt(&self) -> i32;
+
+    fn savings_to_subcategories_prcnt(&self) -> Vec<(String, i32)>;
+    fn wants_to_subcategories_prcnt(&self) -> Vec<(String, i32)>;
+    fn needs_to_subcategories_prcnt(&self) -> Vec<(String, i32)>;
+
+    fn needs_subcategories_values(&self) -> [Vec<i32>; 12];
+    fn wants_subcategories_values(&self) -> [Vec<i32>; 12];
+    fn savings_subcategories_values(&self) -> [Vec<i32>; 12];
 }
 
 impl YearReportSummaryView {
@@ -199,6 +223,14 @@ impl BudgetSummaryView for YearReportSummaryView {
 
     fn net(&self) -> Self::Cells {
         self.make_row("Net", "", self.res.net.as_ref(), self.res.net.total())
+    }
+
+    fn sum_needs_wants_savings_prcnt(&self) -> (i32, i32, i32) {
+        (
+            self.res.sum_needs_prcnt.total_prcnt().round() as i32,
+            self.res.sum_wants_prcnt.total_prcnt().round() as i32,
+            self.res.sum_savings_prcnt.total_prcnt().round() as i32,
+        )
     }
 
     fn sum_income(&self) -> Self::Cells {
@@ -371,6 +403,14 @@ impl BudgetSummaryView for MonthReportSummaryView {
         ]
     }
 
+    fn sum_needs_wants_savings_prcnt(&self) -> (i32, i32, i32) {
+        (
+            self.res.sum_needs_prcnt[self.month0].round() as i32,
+            self.res.sum_wants_prcnt[self.month0].round() as i32,
+            self.res.sum_savings_prcnt[self.month0].round() as i32,
+        )
+    }
+
     fn sum_wants_prcnt(&self) -> Self::Cells {
         [
             Categories::WANTS_LABEL.to_string(),
@@ -522,5 +562,115 @@ impl SavingsAccountView for resources::SavingsAccount {
 
     fn total(&self) -> String {
         format_number(self.total)
+    }
+}
+
+pub struct YearGraphView {
+    res: resources::BudgetSummary,
+    map_by_category: BTreeMap<String, Vec<String>>,
+}
+
+impl YearGraphView {
+    pub fn new(budget: &Budget, categories: &Categories) -> Self {
+        YearGraphView {
+            res: resources::BudgetSummary::new(budget, categories),
+            map_by_category: categories.map_by_category(),
+        }
+    }
+
+    fn get_sorted_subcategories(&self, category: &str) -> Vec<(String, i32)> {
+        let category_total = match category {
+            Categories::NEEDS_LABEL => self.res.sum_needs.total(),
+            Categories::SAVINGS_LABEL => self.res.sum_savings.total(),
+            Categories::WANTS_LABEL => self.res.sum_wants.total(),
+            _ => panic!("Unknown category!"),
+        };
+
+        if category_total == 0.0 {
+            return Vec::new();
+        }
+
+        let Some(subcategories) = self.map_by_category.get(category) else {
+            return Vec::new();
+        };
+
+        let mut group = Vec::new();
+
+        for label in subcategories {
+            let Some((_, balance)) = self.res.subcategories.get(label) else {
+                continue;
+            };
+            if category_total != 0.0 {
+                let prcnt = (balance.total() * 100.0) / category_total;
+                group.push((label.to_string(), prcnt.round() as i32));
+            } else {
+                group.push((label.to_string(), 0));
+            }
+        }
+
+        group.sort_by_key(|k| k.1);
+        group.reverse();
+
+        group
+    }
+
+    fn get_monthly_expenses_by_month(&self, category: &str) -> [Vec<i32>; 12] {
+        let mut expenses: [Vec<i32>; 12] = Default::default();
+        let Some(subcategories) = self.map_by_category.get(category) else {
+            return expenses;
+        };
+
+        for label in subcategories {
+            let Some((_, balance)) = self.res.subcategories.get(label) else {
+                continue;
+            };
+
+            for (subcategory_balance, column) in zip(balance.iter(), expenses.iter_mut()) {
+                let value = i32::abs(*subcategory_balance as i32);
+                if value > 0 {
+                    column.push(value);
+                }
+            }
+        }
+
+        expenses
+    }
+}
+
+impl GraphView for YearGraphView {
+    fn income_to_needs_prcnt(&self) -> i32 {
+        self.res.sum_needs_prcnt.total_prcnt().round() as i32
+    }
+
+    fn income_to_savings_prcnt(&self) -> i32 {
+        self.res.sum_savings_prcnt.total_prcnt().round() as i32
+    }
+
+    fn income_to_wants_prcnt(&self) -> i32 {
+        self.res.sum_wants_prcnt.total_prcnt().round() as i32
+    }
+
+    fn needs_to_subcategories_prcnt(&self) -> Vec<(String, i32)> {
+        self.get_sorted_subcategories(Categories::NEEDS_LABEL)
+    }
+
+    fn savings_to_subcategories_prcnt(&self) -> Vec<(String, i32)> {
+        self.get_sorted_subcategories(Categories::SAVINGS_LABEL)
+    }
+
+    fn wants_to_subcategories_prcnt(&self) -> Vec<(String, i32)> {
+        self.get_sorted_subcategories(Categories::WANTS_LABEL)
+    }
+
+    fn needs_subcategories_values(&self) -> [Vec<i32>; 12] {
+        self.get_monthly_expenses_by_month(Categories::NEEDS_LABEL)
+    }
+
+    fn wants_subcategories_values(&self) -> [Vec<i32>; 12] {
+        self.get_monthly_expenses_by_month(Categories::WANTS_LABEL)
+    }
+
+    fn savings_subcategories_values(&self) -> [Vec<i32>; 12] {
+        self.get_monthly_expenses_by_month(Categories::SAVINGS_LABEL)
     }
 }
