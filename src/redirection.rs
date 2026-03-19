@@ -1,7 +1,7 @@
 use crate::budget::BudgetError;
 use axum::response::Redirect;
 use std::error::Error;
-use tracing::log::{debug, error};
+use tracing::log::debug;
 
 pub fn by_error(err: Box<dyn Error>, year: i32) -> Redirect {
     if let Some(budget_err) = err.downcast_ref::<BudgetError>() {
@@ -17,7 +17,6 @@ pub fn by_error(err: Box<dyn Error>, year: i32) -> Redirect {
             }
         }
     } else {
-        error!("Unhandled error!");
         debug!("{}", err);
         panic!("Unhandled error!");
     }

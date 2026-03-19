@@ -5,7 +5,6 @@ use axum_csrf::CsrfToken;
 use axum_messages::Messages;
 use chrono::{DateTime, Local};
 use tower_sessions::Session;
-use tracing::log::error;
 
 pub mod account;
 pub mod categories;
@@ -93,7 +92,6 @@ impl<'a> WebPageContext<'a> {
         match &self.csrf_token {
             Some(c) => &c,
             None => {
-                error!("Tried to use uninitialized CSRF token.");
                 panic!("Tried to use uninitialized CSRF token.");
             }
         }
@@ -108,7 +106,6 @@ impl<'a> WebPageContext<'a> {
         match &self.account {
             Some(a) => &a,
             None => {
-                error!("Tried to use uninitialized CSRF token.");
                 panic!("Tried to use uninitialized account config.");
             }
         }

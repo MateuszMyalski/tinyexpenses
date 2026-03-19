@@ -122,7 +122,7 @@ pub trait SavingsAccountView {
  *  Subcategory n || 5%
  *
  *               ...
- * 
+ *
  * Category Name n --------------
  *  Subcategory 1 ||||||||| 34%
  *  Subcategory 2 ||||||| 27%

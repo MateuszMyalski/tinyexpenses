@@ -3,7 +3,7 @@ use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use hmac::{Hmac, Mac};
 use scrypt::password_hash::rand_core::{OsRng, RngCore};
 use sha2::Sha256;
-use tracing::log::{debug, error};
+use tracing::log::debug;
 
 /* THE IDEA AND COMPROMISES
  * The approach to implement API token for this application is very basic, and
@@ -36,7 +36,6 @@ fn base64_decode(payload: &str) -> Vec<u8> {
     match URL_SAFE_NO_PAD.decode(payload) {
         Ok(t) => t,
         Err(err) => {
-            error!("Unable to decode base64");
             debug!("{}", err.to_string());
             panic!("Unable to decode base64");
         }

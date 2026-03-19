@@ -4,7 +4,7 @@ use crate::models::csv::tables::{Categories, Plans, Report, Savings};
 use crate::storage::{BasicRepository, FileStorage, Repository, StorageError};
 use std::fs;
 use std::{error::Error, path::Path, path::PathBuf};
-use tracing::log::{debug, error};
+use tracing::log::debug;
 
 #[derive(Debug, Clone)]
 pub struct Account {
@@ -85,14 +85,12 @@ impl Account {
 
         if !savings.exists() {
             if let Err(err) = savings.create() {
-                error!("Unable to create savings.");
                 debug!("{}", err);
                 panic!("Unable to create savings.");
             }
         }
 
         if let Err(err) = savings.read() {
-            error!("Unable to read savings.");
             debug!("{}", err);
             panic!("Unable to read savings.");
         };

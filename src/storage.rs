@@ -114,7 +114,6 @@ pub struct FileStorage {
 impl FileStorage {
     pub fn content(&self) -> &Vec<u8> {
         let Some(content) = &self.content else {
-            error!("Trying to access not loaded content.");
             panic!("Trying to access not loaded content.");
         };
 
@@ -242,7 +241,6 @@ where
 {
     pub fn content(&self) -> &T {
         let Some(content) = &self.content else {
-            error!("Trying to access not loaded content.");
             panic!("Trying to access not loaded content.");
         };
 
@@ -251,7 +249,6 @@ where
 
     pub fn content_mut(&mut self) -> &mut T {
         let Some(content) = &mut self.content else {
-            error!("Trying to access mutually not loaded content.");
             panic!("Trying to access mutually not loaded content.");
         };
 
@@ -553,7 +550,6 @@ where
 
     pub fn content(&self) -> &Vec<T> {
         let Some(content) = &self.content else {
-            error!("Trying to access not loaded content.");
             panic!("Trying to access not loaded content.");
         };
 
@@ -562,7 +558,6 @@ where
 
     pub fn content_mut(&mut self) -> &mut Vec<T> {
         let Some(content) = &mut self.content else {
-            error!("Trying to access mutually not loaded content.");
             panic!("Trying to access mutually not loaded content.");
         };
 
